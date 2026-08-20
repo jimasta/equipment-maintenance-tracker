@@ -1,0 +1,230 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-top: var(--space-2);
+}
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.greetingSubtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.metricCard {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-sm);
+}
+
+.metricIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  background: var(--accent-subtle-bg);
+  color: var(--accent);
+}
+
+.metricIcon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.metricValue {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-tight);
+}
+
+.metricLabel {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.panel {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.panelTitle {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.panelLink {
+  font-size: var(--text-sm);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+}
+
+.panelLink:hover {
+  text-decoration: underline;
+}
+
+.assetRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-hairline);
+  text-decoration: none;
+  color: inherit;
+}
+
+.assetRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.assetRowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.assetRowName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assetRowMeta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.assetRowDate {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.breakdownList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.breakdownRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.breakdownLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+}
+
+.breakdownLabel {
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+}
+
+.breakdownCount {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdownTrack {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.breakdownFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.ctaCard {
+  margin-top: var(--space-4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  background: var(--accent);
+  color: var(--text-on-brand);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ctaTitle {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.ctaDescription {
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}
+
+.ctaButton {
+  align-self: flex-start;
+  height: 2.25rem;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--text-on-brand);
+  color: var(--brand-700);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+}

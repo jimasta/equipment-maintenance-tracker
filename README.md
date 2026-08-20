@@ -38,9 +38,10 @@ Contexto completo de negócio, personas e requisitos em [`docs/01-discovery.md`]
 ## ✨ Funcionalidades
 Status atual: Sprint 2 concluído ([`docs/03-backlog.md`](docs/03-backlog.md)) — autenticação e cadastro de ativos/planos completos.
 
-- [x] Design system (tokens de cor/tipografia, tema claro/escuro, componentes base)
+- [x] Design system (tokens de cor/tipografia, componentes base)
 - [x] Login (API) e controle de acesso por papel (Técnico / Supervisor / Gestor) — `POST /auth/login`, JWT, middleware `requireAuth`/`requireRole`
-- [x] Tela de login e layout shell responsivo (frontend) — validação inline, header com nome/papel do usuário e logout, rota protegida com redirecionamento
+- [x] Tela de login e layout shell responsivo (frontend) — sidebar colapsável com navegação, validação inline, avatar/nome/papel do usuário e logout, rota protegida com redirecionamento
+- [x] Painel inicial com resumo de inventário — total de ativos, tipos, últimos cadastrados e distribuição por tipo
 - [x] Cadastro e listagem de ativos — busca por nome/localização, filtro por tipo, formulário em painel lateral com validação inline, edição restrita a Supervisor/Gestor
 - [x] Cadastro de plano de manutenção preventiva (por dias ou horas de uso) — vinculado ao ativo, com desativação sem apagar histórico
 - [ ] Registro de execução de manutenção (data, técnico, custo, observações)
@@ -73,10 +74,11 @@ Ativos e planos: `GET/POST/PUT /ativos` e `GET/POST /planos` + `PATCH /planos/:i
 | CI/CD | GitHub Actions (lint + test) |
 
 ## 🎨 Design System
-Cores, tipografia, espaçamento e raio de borda são centralizados em variáveis CSS (`frontend/src/styles/tokens.css`), com suporte completo a tema claro e escuro desde a fundação do projeto:
+Cores, tipografia, espaçamento e raio de borda são centralizados em variáveis CSS (`frontend/src/styles/tokens.css`). A aplicação usa somente tema claro (o suporte a tema escuro automático foi removido por decisão do usuário, para simplificar a manutenção da paleta):
 
-- **Accent de marca:** azul-petróleo, escolhido deliberadamente distante da faixa laranja/âmbar/vermelho usada pelos status, para que uma ação primária (botão, link) nunca seja confundida com um alerta de manutenção vencida.
-- **Status fixo (não temático):** verde (Em dia), âmbar (Próximo do vencimento), vermelho (Vencido) — sempre comunicado com cor + ícone + texto, nunca só cor.
+- **Accent de marca:** azul-petróleo, usado em botões e links primários, escolhido deliberadamente distante da faixa laranja/âmbar/vermelho usada pelos status, para que uma ação primária nunca seja confundida com um alerta de manutenção vencida.
+- **Status fixo:** verde (Em dia), âmbar (Próximo do vencimento), vermelho (Vencido) — sempre comunicado com cor + ícone + texto, nunca só cor.
+- **Sidebar com superfície terracota/laranja-queimado:** distinta do fundo claro do conteúdo, via tokens dedicados (`--sidebar-bg`, `--sidebar-text`, `--sidebar-accent`, etc. em `tokens.css`). É uma cor de superfície passiva (não uma cor de ação/alerta), então convive com o accent teal e o status âmbar sem ambiguidade — teal e terracota são aproximadamente complementares, o que reforça o contraste.
 - **Tipografia:** Inter (interface) + JetBrains Mono (dados tabulares/códigos de ativo).
 
 Componentes de UI (`frontend/src/components/`) consomem exclusivamente essas variáveis — trocar a paleta ou a fonte da aplicação inteira é uma edição em um único arquivo.
@@ -121,7 +123,7 @@ equipment-maintenance-tracker/
 ├── frontend/
 │   └── src/
 │       ├── auth/         # AuthContext (sessão/token), RequireAuth (guarda de rota)
-│       ├── layout/       # AppShell (header + navegação responsiva)
+│       ├── layout/       # AppShell (sidebar colapsável + topbar com breadcrumb)
 │       ├── pages/
 │       │   ├── ativos/   # AtivosPage, AtivoDetailPage, AtivoForm, PlanoForm
 │       │   ├── LoginPage.tsx

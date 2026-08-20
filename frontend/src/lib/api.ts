@@ -48,6 +48,7 @@ export interface Ativo {
   localizacao: string;
   dataAquisicao: string;
   criadoEm: string;
+  planosAtivos: number;
 }
 
 export interface AtivoInput {

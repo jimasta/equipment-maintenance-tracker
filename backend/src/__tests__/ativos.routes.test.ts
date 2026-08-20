@@ -36,7 +36,7 @@ describe('GET /ativos', () => {
   });
 
   it('lists ativos for an authenticated user of any role', async () => {
-    findMany.mockResolvedValueOnce([{ id: 'a1', nome: 'Bomba 1' }]);
+    findMany.mockResolvedValueOnce([{ id: 'a1', nome: 'Bomba 1', _count: { planos: 2 } }]);
     const { createApp } = await import('../app');
     const app = createApp();
     const token = await tokenFor('TECNICO');
@@ -44,7 +44,7 @@ describe('GET /ativos', () => {
     const response = await request(app).get('/ativos').set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual([{ id: 'a1', nome: 'Bomba 1' }]);
+    expect(response.body).toEqual([{ id: 'a1', nome: 'Bomba 1', planosAtivos: 2 }]);
   });
 });
 

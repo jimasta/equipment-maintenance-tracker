@@ -7,8 +7,8 @@ export interface AtivoInput {
   dataAquisicao: string;
 }
 
-export function listAtivos(filtros: { tipo?: string; localizacao?: string }) {
-  return prisma.ativo.findMany({
+export async function listAtivos(filtros: { tipo?: string; localizacao?: string }) {
+  const ativos = await prisma.ativo.findMany({
     where: {
       ...(filtros.tipo ? { tipo: { contains: filtros.tipo, mode: 'insensitive' } } : {}),
       ...(filtros.localizacao
@@ -16,7 +16,12 @@ export function listAtivos(filtros: { tipo?: string; localizacao?: string }) {
         : {}),
     },
     orderBy: { criadoEm: 'desc' },
+    include: {
+      _count: { select: { planos: { where: { estaAtivo: true } } } },
+    },
   });
+
+  return ativos.map(({ _count, ...ativo }) => ({ ...ativo, planosAtivos: _count.planos }));
 }
 
 export function getAtivo(id: string) {

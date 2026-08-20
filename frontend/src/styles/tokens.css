@@ -1,8 +1,11 @@
 /*
   Design tokens — Equipment Maintenance Tracker
-  Brand accent (teal/petrol, hue ~192) is kept clear of the status hue band
-  (green/amber/red) so primary actions are never mistaken for a maintenance alert.
-  Status colors are fixed and never themed — same hex in light and dark.
+  Light theme only. Brand accent (teal/petrol, hue ~192) is kept clear of the
+  status hue band (green/amber/red) so primary actions are never mistaken for
+  a maintenance alert. Status colors are fixed. The sidebar uses a distinct
+  burnt-orange surface (--sidebar-*) for visual separation from the content
+  area — it's a passive surface, not an action color, so it doesn't collide
+  with the amber "Próximo do vencimento" status.
 */
 
 :root {
@@ -28,7 +31,7 @@
   --neutral-800: #262e33;
   --neutral-900: #14191c;
 
-  /* Status — fixed, never themed (Em dia / Próximo do vencimento / Vencido) */
+  /* Status — fixed (Em dia / Próximo do vencimento / Vencido) */
   --status-good: #0ca30c;
   --status-good-bg: #e6f6e6;
   --status-warning: #c98500;
@@ -93,78 +96,15 @@
   /* Shadow */
   --shadow-sm: 0 1px 2px rgba(20, 25, 28, 0.06);
   --shadow-md: 0 4px 12px rgba(20, 25, 28, 0.08);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    color-scheme: dark;
-
-    --neutral-0: #14191c;
-    --neutral-50: #181e21;
-    --neutral-100: #1f262a;
-    --neutral-200: #2c363c;
-    --neutral-300: #414d54;
-    --neutral-400: #6b767d;
-    --neutral-500: #8d979e;
-    --neutral-600: #aeb6bb;
-    --neutral-700: #cbd1d4;
-    --neutral-800: #e4e7e9;
-    --neutral-900: #f7f8f9;
-
-    --status-good-bg: #10271a;
-    --status-warning-bg: #2b2211;
-    --status-critical-bg: #2c1616;
-
-    --surface-page: var(--neutral-50);
-    --surface-raised: var(--neutral-100);
-    --surface-sunken: #101517;
-    --border-hairline: var(--neutral-200);
-
-    --text-primary: var(--neutral-900);
-    --text-secondary: var(--neutral-600);
-    --text-muted: var(--neutral-400);
-
-    --accent: var(--brand-400);
-    --accent-hover: var(--brand-300);
-    --accent-subtle-bg: #16333a;
-
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  }
-}
-
-:root[data-theme='dark'] {
-  color-scheme: dark;
-
-  --neutral-0: #14191c;
-  --neutral-50: #181e21;
-  --neutral-100: #1f262a;
-  --neutral-200: #2c363c;
-  --neutral-300: #414d54;
-  --neutral-400: #6b767d;
-  --neutral-500: #8d979e;
-  --neutral-600: #aeb6bb;
-  --neutral-700: #cbd1d4;
-  --neutral-800: #e4e7e9;
-  --neutral-900: #f7f8f9;
-
-  --status-good-bg: #10271a;
-  --status-warning-bg: #2b2211;
-  --status-critical-bg: #2c1616;
-
-  --surface-page: var(--neutral-50);
-  --surface-raised: var(--neutral-100);
-  --surface-sunken: #101517;
-  --border-hairline: var(--neutral-200);
-
-  --text-primary: var(--neutral-900);
-  --text-secondary: var(--neutral-600);
-  --text-muted: var(--neutral-400);
-
-  --accent: var(--brand-400);
-  --accent-hover: var(--brand-300);
-  --accent-subtle-bg: #16333a;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  /* Sidebar — burnt-orange surface, distinct from the page/content background */
+  --sidebar-bg: #4a2a18;
+  --sidebar-bg-raised: #5c3620;
+  --sidebar-border: #6b3f26;
+  --sidebar-text: #fdf3ec;
+  --sidebar-text-secondary: #e0b79a;
+  --sidebar-text-muted: #b98a6b;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.14);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-accent: #e08a4f;
 }

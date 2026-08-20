@@ -17,6 +17,7 @@ const ativoMock: api.Ativo = {
   localizacao: 'Galpão 2',
   dataAquisicao: '2024-01-15T00:00:00.000Z',
   criadoEm: '2024-01-15T00:00:00.000Z',
+  planosAtivos: 1,
 };
 
 function renderPage() {

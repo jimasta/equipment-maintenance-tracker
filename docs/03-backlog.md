@@ -143,6 +143,26 @@ Cada user story deve virar uma Issue no repositório, com label do épico corres
 ## Próximo passo
 Sprint 1 e Sprint 2 concluídos. Revalidar `docker-compose up` fim a fim quando Docker estiver disponível; em seguida, iniciar Sprint 3 (registro de execução de manutenção e cálculo de status Em dia/Próximo/Vencido — RF04, ADR-002).
 
+## Retrabalho de layout — Sidebar colapsável e painel de inventário
+Após o Sprint 2, revisão do usuário pediu que o shell da aplicação se aproximasse de referências reais de dashboard (Outstaff, FinPlanner, Gentelella, Video Buddy, 50GRAM) em vez do header horizontal original da US00a. Mudança aplicada:
+
+- **US00a revisada** — o header horizontal foi substituído por uma sidebar vertical colapsável (ícone+texto por padrão, alterna para só-ícone), com o estado persistido em `localStorage` entre sessões. Segue o padrão observado nas referências: navegação vertical, item ativo destacado com fundo sólido, seção "Menu" rotulada, cartão de usuário (avatar + nome + papel) e logout fixados no rodapé da sidebar.
+- **Sidebar com superfície fixa e escura**, independente do tema claro/escuro do usuário — replica o contraste de superfície visto em todas as referências (a sidebar não "clareia" quando o usuário troca para tema claro). Implementado com tokens dedicados (`--sidebar-bg` e afins) em `tokens.css`.
+- **Painel inicial (Dashboard) redesenhado** como resumo de inventário real: cards de métricas (total de ativos, tipos distintos, data do último cadastro), lista de ativos recentes clicável, distribuição por tipo com barras de progresso, e um card de call-to-action em destaque (accent sólido) para cadastro rápido — sem inventar métricas que ainda não existem (ex: nenhum "+20%" fictício, já que não há dado histórico para comparar).
+- **Badge de status na listagem de Ativos** — nova coluna "Manutenção" mostra `N planos ativos` (verde) ou `Sem plano` (neutro) por ativo, replicando o padrão de badges coloridas de status visto nas tabelas de referência (Open/Closed/In Review). Exigiu adicionar `_count` de planos ativos em `listAtivos` (backend) e o campo `planosAtivos` no tipo `Ativo` do frontend.
+- **Breadcrumb** simples no topbar, refletindo a rota atual (Painel / Ativos / Ativos → Detalhe do ativo).
+
+**Bug encontrado durante a implementação:** a primeira tentativa de tornar a sidebar "sempre escura" referenciou `var(--neutral-900)` para o fundo — mas essa variável é *redefinida* dentro dos blocos de tema (`@media prefers-color-scheme: dark` e `[data-theme='dark']`), então o valor muda com o tema do usuário em vez de ficar fixo. A sidebar ficava clara no tema claro, quebrando o contraste pretendido. Corrigido usando hex literal (`#14191c`, o mesmo valor do `--neutral-900` do `:root` base) nos tokens de sidebar — a lição foi documentada no README (seção Design System) para não se repetir ao adicionar futuros tokens "fixos".
+
+Validado com o mesmo método dos sprints anteriores: Postgres portátil + `npm run dev` + Chrome headless dirigido por script, cobrindo sidebar expandida, colapsada, e largura tablet (820px), todas com dados reais.
+
+## Ajuste de paleta — remoção do tema escuro e sidebar terracota
+Segunda rodada de feedback: o suporte a tema claro/escuro automático (`@media prefers-color-scheme: dark` + `:root[data-theme='dark']` em `tokens.css`) foi removido — a aplicação agora é só tema claro, decisão explícita do usuário para simplificar a manutenção da paleta e evitar a classe de bug encontrada na rodada anterior (tokens que deveriam ser fixos "vazando" o tema).
+
+A sidebar deixou de usar um neutro escuro genérico e passou a usar uma superfície terracota/laranja-queimado (`--sidebar-bg: #4a2a18` e tokens irmãos), pedido explícito para que o menu tivesse uma cor distinta do fundo do conteúdo com uma combinação harmônica. Essa cor convive com o accent teal da marca (botões/links) e com o status âmbar ("Próximo do vencimento") porque é uma cor de superfície passiva, não uma cor de ação/alerta — teal e terracota são aproximadamente complementares na roda cromática, o que reforça o contraste sem parecer aleatório.
+
+Revalidado visualmente (Postgres real + Chrome headless) em desktop expandido, colapsado e tablet.
+
 ## Nota de ambiente — Docker
 O ambiente de desenvolvimento atual (sandbox de agente) não tem Docker/Docker Compose instalado, então `docker-compose up` não pôde ser exercitado diretamente aqui. Como alternativa equivalente, a validação de ponta a ponta do Sprint 1 foi feita com:
 - PostgreSQL portátil (binários EDB, sem instalação como serviço) com as migrations reais do Prisma aplicadas;

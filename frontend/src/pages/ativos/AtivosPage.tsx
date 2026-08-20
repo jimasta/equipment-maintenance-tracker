@@ -172,6 +172,7 @@ export function AtivosPage() {
                 <th>Tipo</th>
                 <th>Localização</th>
                 <th>Aquisição</th>
+                <th>Manutenção</th>
                 {podeGerenciar && <th aria-label="Ações" />}
               </tr>
             </thead>
@@ -188,6 +189,16 @@ export function AtivosPage() {
                   </td>
                   <td>{ativo.localizacao}</td>
                   <td className={styles.dateCell}>{formatDate(ativo.dataAquisicao)}</td>
+                  <td>
+                    <span
+                      className={`${styles.planoBadge} ${ativo.planosAtivos > 0 ? styles.planoBadgeActive : styles.planoBadgeNone}`}
+                    >
+                      <span className={styles.planoBadgeDot} aria-hidden="true" />
+                      {ativo.planosAtivos > 0
+                        ? `${ativo.planosAtivos} plano${ativo.planosAtivos === 1 ? '' : 's'} ativo${ativo.planosAtivos === 1 ? '' : 's'}`
+                        : 'Sem plano'}
+                    </span>
+                  </td>
                   {podeGerenciar && (
                     <td>
                       <div className={styles.rowActions}>
