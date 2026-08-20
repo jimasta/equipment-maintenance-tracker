@@ -30,6 +30,84 @@ async function tokenFor(papel: 'TECNICO' | 'SUPERVISOR' | 'GESTOR') {
   return signToken({ sub: 'user-1', nome: 'Usuário Teste', papel });
 }
 
+describe('GET /planos', () => {
+  it('returns 400 when ativoId is missing', async () => {
+    const { createApp } = await import('../app');
+    const app = createApp();
+    const token = await tokenFor('TECNICO');
+
+    const response = await request(app).get('/planos').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(400);
+  });
+
+  it('computes proximoVencimento and status for each active plano', async () => {
+    planoFindMany.mockResolvedValueOnce([
+      {
+        id: 'p1',
+        ativoId: 'a1',
+        intervaloTipo: 'DIAS',
+        intervaloValor: 30,
+        estaAtivo: true,
+        ativo: { id: 'a1', nome: 'Bomba', dataAquisicao: new Date('2026-01-01T00:00:00.000Z') },
+        registros: [],
+      },
+      {
+        id: 'p2',
+        ativoId: 'a1',
+        intervaloTipo: 'DIAS',
+        intervaloValor: 30,
+        estaAtivo: false,
+        ativo: { id: 'a1', nome: 'Bomba', dataAquisicao: new Date('2026-01-01T00:00:00.000Z') },
+        registros: [],
+      },
+    ]);
+    const { createApp } = await import('../app');
+    const app = createApp();
+    const token = await tokenFor('TECNICO');
+
+    const response = await request(app)
+      .get('/planos?ativoId=a1')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body[0]).toMatchObject({ id: 'p1', status: 'VENCIDO' });
+    expect(response.body[1]).toMatchObject({ id: 'p2', status: null, proximoVencimento: null });
+  });
+});
+
+describe('GET /planos/pendentes', () => {
+  it('only returns planos with status PROXIMO or VENCIDO', async () => {
+    planoFindMany.mockResolvedValueOnce([
+      {
+        id: 'p-vencido',
+        intervaloValor: 10,
+        estaAtivo: true,
+        ativo: { id: 'a1', nome: 'Bomba', dataAquisicao: new Date('2020-01-01T00:00:00.000Z') },
+        registros: [],
+      },
+      {
+        id: 'p-em-dia',
+        intervaloValor: 3650,
+        estaAtivo: true,
+        ativo: { id: 'a2', nome: 'Gerador', dataAquisicao: new Date() },
+        registros: [],
+      },
+    ]);
+    const { createApp } = await import('../app');
+    const app = createApp();
+    const token = await tokenFor('TECNICO');
+
+    const response = await request(app)
+      .get('/planos/pendentes')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0]).toMatchObject({ id: 'p-vencido', status: 'VENCIDO' });
+  });
+});
+
 describe('POST /planos', () => {
   it('returns 400 for an invalid intervaloTipo', async () => {
     const { createApp } = await import('../app');

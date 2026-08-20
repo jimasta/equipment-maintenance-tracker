@@ -5,23 +5,34 @@ import { EmptyState, ErrorState, SkeletonList } from '../../components/AsyncStat
 import { AssetTypeTag } from '../../components/AssetTypeTag';
 import { Button } from '../../components/Button';
 import { Drawer } from '../../components/Drawer';
+import { StatusBadge, AssetStatus } from '../../components/StatusBadge';
 import { Toast } from '../../components/Toast';
 import {
   ApiError,
   Ativo,
   PlanoInput,
   PlanoManutencao,
+  RegistroInput,
+  StatusPlano,
   createPlano,
+  createRegistro,
   desativarPlano,
   fetchAtivo,
   fetchPlanos,
 } from '../../lib/api';
 import { PlanoForm } from './PlanoForm';
+import { RegistroForm } from './RegistroForm';
 import styles from './AtivoDetailPage.module.css';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 }
+
+const STATUS_MAP: Record<StatusPlano, AssetStatus> = {
+  EM_DIA: 'em-dia',
+  PROXIMO: 'proximo',
+  VENCIDO: 'vencido',
+};
 
 export function AtivoDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +44,7 @@ export function AtivoDetailPage() {
   const [planos, setPlanos] = useState<PlanoManutencao[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [drawerAberto, setDrawerAberto] = useState(false);
+  const [planoEmExecucao, setPlanoEmExecucao] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   async function carregar() {
@@ -70,6 +82,13 @@ export function AtivoDetailPage() {
   async function desativar(planoId: string) {
     await desativarPlano(planoId);
     setToast('Plano desativado.');
+    await carregar();
+  }
+
+  async function salvarRegistro(data: RegistroInput) {
+    await createRegistro(data);
+    setToast('Execução registrada com sucesso.');
+    setPlanoEmExecucao(null);
     await carregar();
   }
 
@@ -152,13 +171,30 @@ export function AtivoDetailPage() {
                       {plano.intervaloTipo === 'HORAS_USO' ? 'horas de uso' : 'dias'}
                     </span>
                   </div>
+
+                  {plano.estaAtivo && plano.status && (
+                    <div className={styles.planStatus}>
+                      <StatusBadge status={STATUS_MAP[plano.status]} />
+                      {plano.proximoVencimento && (
+                        <span className={styles.planDueDate}>
+                          vence em {formatDate(plano.proximoVencimento)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <div className={styles.planFooter}>
                     {plano.estaAtivo ? (
-                      podeGerenciar && (
-                        <Button variant="ghost" onClick={() => desativar(plano.id)}>
-                          Desativar
+                      <>
+                        <Button variant="secondary" onClick={() => setPlanoEmExecucao(plano.id)}>
+                          Registrar execução
                         </Button>
-                      )
+                        {podeGerenciar && (
+                          <Button variant="ghost" onClick={() => desativar(plano.id)}>
+                            Desativar
+                          </Button>
+                        )}
+                      </>
                     ) : (
                       <span className={styles.inactiveLabel}>Desativado</span>
                     )}
@@ -176,6 +212,16 @@ export function AtivoDetailPage() {
             ativoId={ativo.id}
             onSubmit={salvarPlano}
             onCancel={() => setDrawerAberto(false)}
+          />
+        </Drawer>
+      )}
+
+      {planoEmExecucao && (
+        <Drawer title="Registrar execução" onClose={() => setPlanoEmExecucao(null)}>
+          <RegistroForm
+            planoManutencaoId={planoEmExecucao}
+            onSubmit={salvarRegistro}
+            onCancel={() => setPlanoEmExecucao(null)}
           />
         </Drawer>
       )}

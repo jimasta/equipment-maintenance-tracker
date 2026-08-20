@@ -5,6 +5,7 @@ import {
   createPlano,
   desativarPlano,
   getPlano,
+  listPlanosPendentes,
   listPlanosPorAtivo,
   validatePlanoInput,
 } from '../services/planoService';
@@ -12,6 +13,11 @@ import {
 export const planosRouter = Router();
 
 planosRouter.use(requireAuth);
+
+planosRouter.get('/pendentes', async (_req, res) => {
+  const planos = await listPlanosPendentes();
+  res.json(planos);
+});
 
 planosRouter.get('/', async (req, res) => {
   const { ativoId } = req.query as { ativoId?: string };
