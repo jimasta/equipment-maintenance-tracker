@@ -36,11 +36,11 @@ Empresas industriais (oil & gas, agribusiness) operam ativos críticos — bomba
 Contexto completo de negócio, personas e requisitos em [`docs/01-discovery.md`](docs/01-discovery.md).
 
 ## ✨ Funcionalidades
-Status atual: Sprint 1 em andamento ([`docs/03-backlog.md`](docs/03-backlog.md)) — backend de autenticação implementado e validado; layout shell e telas de login/UI ainda pendentes.
+Status atual: Sprint 1 concluído ([`docs/03-backlog.md`](docs/03-backlog.md)) — autenticação completa (API + UI).
 
 - [x] Design system (tokens de cor/tipografia, tema claro/escuro, componentes base)
 - [x] Login (API) e controle de acesso por papel (Técnico / Supervisor / Gestor) — `POST /auth/login`, JWT, middleware `requireAuth`/`requireRole`
-- [ ] Tela de login e layout shell responsivo (frontend)
+- [x] Tela de login e layout shell responsivo (frontend) — validação inline, header com nome/papel do usuário e logout, rota protegida com redirecionamento
 - [ ] Cadastro e listagem de ativos
 - [ ] Cadastro de plano de manutenção preventiva (por dias ou horas de uso)
 - [ ] Registro de execução de manutenção (data, técnico, custo, observações)
@@ -55,6 +55,8 @@ Modelo de dados (Ativo, PlanoManutenção, RegistroManutenção, Usuário), diag
 Resumo do fluxo: SPA React consome uma API REST (Express), que aplica regras de negócio (cálculo de status derivado por data) antes de ler/gravar no PostgreSQL via Prisma.
 
 Autenticação: `POST /auth/login` valida e-mail/senha (bcrypt) e emite um JWT (8h de validade) contendo `id`, `nome` e `papel` do usuário. Rotas protegidas usam o middleware `requireAuth` (exige token válido) e `requireRole(...papeis)` (restringe por papel) em `backend/src/middleware/auth.ts`.
+
+No frontend, `AuthProvider` (`frontend/src/auth/AuthContext.tsx`) guarda o token em `localStorage`, valida a sessão via `GET /me` ao carregar a aplicação e expõe `login`/`logout`. `RequireAuth` protege rotas privadas redirecionando para `/login` (preservando a rota de origem para retorno pós-login).
 
 ## 🛠️ Stack Tecnológica
 
@@ -116,7 +118,11 @@ equipment-maintenance-tracker/
 │       └── lib/          # prisma.ts (client singleton)
 ├── frontend/
 │   └── src/
-│       ├── components/   # componentes de UI (Button, StatusBadge, ...)
+│       ├── auth/         # AuthContext (sessão/token), RequireAuth (guarda de rota)
+│       ├── layout/       # AppShell (header + navegação responsiva)
+│       ├── pages/        # LoginPage, DashboardPage
+│       ├── lib/          # api.ts (cliente HTTP)
+│       ├── components/   # componentes de UI (Button, StatusBadge, Input, Select, ...)
 │       └── styles/       # tokens.css, globals.css
 ├── docs/
 │   ├── 01-discovery.md
@@ -143,13 +149,12 @@ cd backend && npm test
 # Frontend
 cd frontend && npm test
 ```
-Cobertura atual (backend): smoke test de `/health`, `authService` (hash/verificação de senha, emissão/validação de JWT) e rotas de autenticação (`/auth/login` com credenciais válidas/inválidas, `/me` com e sem token) — 9 testes automatizados, todos com Prisma mockado. Frontend: smoke test de render do `App`. Cobertura por feature será expandida a cada sprint, conforme a Definition of Done em [`docs/03-backlog.md`](docs/03-backlog.md).
+Cobertura atual (backend): smoke test de `/health`, `authService` (hash/verificação de senha, emissão/validação de JWT) e rotas de autenticação (`/auth/login` com credenciais válidas/inválidas, `/me` com e sem token) — 9 testes automatizados, todos com Prisma mockado. Frontend: redirecionamento de rota protegida para `/login`, validação inline de formulário vazio e exibição de erro de credenciais inválidas (API mockada). Cobertura por feature será expandida a cada sprint, conforme a Definition of Done em [`docs/03-backlog.md`](docs/03-backlog.md).
 
-Validação end-to-end do login também foi feita manualmente via `docker-compose` com PostgreSQL real (não só com mocks), incluindo aplicação de migration e criação de usuário de teste.
+> Validação end-to-end via `docker-compose` com PostgreSQL real (login + navegação autenticada) ainda não foi refeita após a UI de auth — pendente antes de fechar o sprint formalmente.
 
 ## 🗺️ Roadmap
-- [x] Sprint 1 (parcial) — API de autenticação (login, JWT, controle por papel)
-- [ ] Sprint 1 (restante) — Layout shell responsivo + tela de login
+- [x] Sprint 1 — Autenticação completa (API + layout shell responsivo + tela de login)
 - [ ] Sprint 2 — Cadastro de ativos e planos de manutenção
 - [ ] Sprint 3 — Registro de execução e cálculo de status
 - [ ] Sprint 4 — Painel de alertas, histórico e relatório de custo
