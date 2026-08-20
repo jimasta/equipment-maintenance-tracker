@@ -36,10 +36,11 @@ Empresas industriais (oil & gas, agribusiness) operam ativos críticos — bomba
 Contexto completo de negócio, personas e requisitos em [`docs/01-discovery.md`](docs/01-discovery.md).
 
 ## ✨ Funcionalidades
-Status atual: Etapa 5 do SDLC (desenvolvimento iterativo) ainda não iniciada — fundação de design system pronta, funcionalidades abaixo são o backlog do MVP ([`docs/03-backlog.md`](docs/03-backlog.md)).
+Status atual: Sprint 1 em andamento ([`docs/03-backlog.md`](docs/03-backlog.md)) — backend de autenticação implementado e validado; layout shell e telas de login/UI ainda pendentes.
 
 - [x] Design system (tokens de cor/tipografia, tema claro/escuro, componentes base)
-- [ ] Login e controle de acesso por papel (Técnico / Supervisor / Gestor)
+- [x] Login (API) e controle de acesso por papel (Técnico / Supervisor / Gestor) — `POST /auth/login`, JWT, middleware `requireAuth`/`requireRole`
+- [ ] Tela de login e layout shell responsivo (frontend)
 - [ ] Cadastro e listagem de ativos
 - [ ] Cadastro de plano de manutenção preventiva (por dias ou horas de uso)
 - [ ] Registro de execução de manutenção (data, técnico, custo, observações)
@@ -52,6 +53,8 @@ Status atual: Etapa 5 do SDLC (desenvolvimento iterativo) ainda não iniciada �
 Modelo de dados (Ativo, PlanoManutenção, RegistroManutenção, Usuário), diagrama de camadas e Architecture Decision Records completos em [`docs/02-architecture.md`](docs/02-architecture.md).
 
 Resumo do fluxo: SPA React consome uma API REST (Express), que aplica regras de negócio (cálculo de status derivado por data) antes de ler/gravar no PostgreSQL via Prisma.
+
+Autenticação: `POST /auth/login` valida e-mail/senha (bcrypt) e emite um JWT (8h de validade) contendo `id`, `nome` e `papel` do usuário. Rotas protegidas usam o middleware `requireAuth` (exige token válido) e `requireRole(...papeis)` (restringe por papel) em `backend/src/middleware/auth.ts`.
 
 ## 🛠️ Stack Tecnológica
 
@@ -91,17 +94,26 @@ cp backend/.env.example backend/.env
 
 # Suba a aplicação completa (API + frontend + PostgreSQL)
 docker-compose up
+
+# Em outro terminal: aplique as migrations do banco
+docker-compose exec backend npx prisma migrate dev
 ```
 
 - Backend: http://localhost:3000
 - Frontend: http://localhost:5173
 
+> **Nota:** a imagem do backend instala `openssl` (exigido pelo engine do Prisma em Alpine). Se ao rodar `bcrypt` dentro do container aparecer erro de binário incompatível, o `.dockerignore` do projeto evita que o `node_modules` do host vaze para a imagem — não delete/ignore esse arquivo.
+
 ## 📁 Estrutura de Pastas
 ```
 equipment-maintenance-tracker/
 ├── backend/
-│   ├── prisma/           # schema.prisma (modelo de dados)
+│   ├── prisma/           # schema.prisma (modelo de dados) + migrations/
 │   └── src/
+│       ├── routes/       # auth.ts (login), me.ts (exemplo de rota protegida)
+│       ├── middleware/   # requireAuth, requireRole
+│       ├── services/     # authService.ts (hash de senha, JWT)
+│       └── lib/          # prisma.ts (client singleton)
 ├── frontend/
 │   └── src/
 │       ├── components/   # componentes de UI (Button, StatusBadge, ...)
@@ -119,7 +131,9 @@ Principais decisões de arquitetura documentadas em [`docs/02-architecture.md`](
 - PostgreSQL em vez de SQL Server/MongoDB
 - Status de ativo calculado em tempo de leitura, nunca armazenado
 - Alertas apenas em painel no MVP (e-mail real fica para iteração futura)
-- Autenticação JWT stateless
+- Autenticação JWT stateless (8h de validade, papel do usuário embutido no token)
+
+Detalhe de implementação relevante: o `Dockerfile` do backend precisou de `openssl` explícito (Prisma não detecta a lib corretamente em Alpine sem isso) e ambos os projetos precisam de `.dockerignore` para impedir que o `node_modules` do host contamine a imagem Linux com binários nativos incompatíveis (ex: `bcrypt`).
 
 ## ✅ Testes
 ```bash
@@ -129,10 +143,13 @@ cd backend && npm test
 # Frontend
 cd frontend && npm test
 ```
-Cobertura atual: testes iniciais de smoke (`/health` no backend, render do `App` no frontend); cobertura por feature será expandida a cada sprint, conforme a Definition of Done em [`docs/03-backlog.md`](docs/03-backlog.md).
+Cobertura atual (backend): smoke test de `/health`, `authService` (hash/verificação de senha, emissão/validação de JWT) e rotas de autenticação (`/auth/login` com credenciais válidas/inválidas, `/me` com e sem token) — 9 testes automatizados, todos com Prisma mockado. Frontend: smoke test de render do `App`. Cobertura por feature será expandida a cada sprint, conforme a Definition of Done em [`docs/03-backlog.md`](docs/03-backlog.md).
+
+Validação end-to-end do login também foi feita manualmente via `docker-compose` com PostgreSQL real (não só com mocks), incluindo aplicação de migration e criação de usuário de teste.
 
 ## 🗺️ Roadmap
-- [ ] Sprint 1 — Layout shell responsivo + autenticação
+- [x] Sprint 1 (parcial) — API de autenticação (login, JWT, controle por papel)
+- [ ] Sprint 1 (restante) — Layout shell responsivo + tela de login
 - [ ] Sprint 2 — Cadastro de ativos e planos de manutenção
 - [ ] Sprint 3 — Registro de execução e cálculo de status
 - [ ] Sprint 4 — Painel de alertas, histórico e relatório de custo
