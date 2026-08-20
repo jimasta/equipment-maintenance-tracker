@@ -15,6 +15,17 @@ export function listRegistrosPorPlano(planoManutencaoId: string) {
   });
 }
 
+export function listRegistrosPorAtivo(ativoId: string) {
+  return prisma.registroManutencao.findMany({
+    where: { planoManutencao: { ativoId } },
+    orderBy: { dataExecucao: 'desc' },
+    include: {
+      tecnico: { select: { id: true, nome: true } },
+      planoManutencao: { select: { id: true, intervaloTipo: true, intervaloValor: true } },
+    },
+  });
+}
+
 export function createRegistro(tecnicoId: string, data: RegistroInput) {
   return prisma.registroManutencao.create({
     data: {

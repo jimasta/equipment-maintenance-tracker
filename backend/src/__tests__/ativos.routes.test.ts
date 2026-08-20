@@ -5,6 +5,7 @@ const findMany = vi.fn();
 const findUnique = vi.fn();
 const create = vi.fn();
 const update = vi.fn();
+const registroFindMany = vi.fn();
 
 vi.mock('../lib/prisma', () => ({
   prisma: {
@@ -13,6 +14,9 @@ vi.mock('../lib/prisma', () => ({
       findUnique: (...args: unknown[]) => findUnique(...args),
       create: (...args: unknown[]) => create(...args),
       update: (...args: unknown[]) => update(...args),
+    },
+    registroManutencao: {
+      findMany: (...args: unknown[]) => registroFindMany(...args),
     },
   },
 }));
@@ -98,6 +102,36 @@ describe('POST /ativos', () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toEqual({ id: 'a1', nome: 'Bomba 1' });
+  });
+});
+
+describe('GET /ativos/:id/historico', () => {
+  it('returns 404 when the ativo does not exist', async () => {
+    findUnique.mockResolvedValueOnce(null);
+    const { createApp } = await import('../app');
+    const app = createApp();
+    const token = await tokenFor('TECNICO');
+
+    const response = await request(app)
+      .get('/ativos/missing/historico')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(404);
+  });
+
+  it('lists all registros for the ativo', async () => {
+    findUnique.mockResolvedValueOnce({ id: 'a1', nome: 'Bomba 1' });
+    registroFindMany.mockResolvedValueOnce([{ id: 'r1', custo: '150.00' }]);
+    const { createApp } = await import('../app');
+    const app = createApp();
+    const token = await tokenFor('TECNICO');
+
+    const response = await request(app)
+      .get('/ativos/a1/historico')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([{ id: 'r1', custo: '150.00' }]);
   });
 });
 

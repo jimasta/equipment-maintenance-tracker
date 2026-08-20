@@ -9,7 +9,15 @@ const PAPEL_LABELS: Record<string, string> = {
   GESTOR: 'Gestor',
 };
 
-const NAV_ITEMS = [
+interface NavItem {
+  to: string;
+  end: boolean;
+  label: string;
+  icon: JSX.Element;
+  gestorOnly?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
   {
     to: '/',
     end: true,
@@ -60,6 +68,26 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    to: '/relatorios',
+    end: true,
+    label: 'Relatórios',
+    gestorOnly: true,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M4 4v16h16"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <rect x="7" y="12" width="2.5" height="5" rx="0.5" fill="currentColor" />
+        <rect x="11.5" y="9" width="2.5" height="8" rx="0.5" fill="currentColor" />
+        <rect x="16" y="6" width="2.5" height="11" rx="0.5" fill="currentColor" />
+      </svg>
+    ),
+  },
 ];
 
 function getInitials(nome: string) {
@@ -75,6 +103,7 @@ function useBreadcrumb() {
   if (location.pathname === '/ativos') return ['Ativos'];
   if (location.pathname.startsWith('/ativos/')) return ['Ativos', 'Detalhe do ativo'];
   if (location.pathname === '/pendencias') return ['Pendências'];
+  if (location.pathname === '/relatorios') return ['Relatórios'];
   return [];
 }
 
@@ -134,20 +163,22 @@ export function AppShell() {
 
         {!collapsed && <span className={styles.sectionLabel}>Menu</span>}
         <nav className={styles.nav} aria-label="Navegação principal">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              title={collapsed ? item.label : undefined}
-              className={({ isActive }) =>
-                [styles.navLink, isActive ? styles.navLinkActive : ''].filter(Boolean).join(' ')
-              }
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.filter((item) => !item.gestorOnly || usuario?.papel === 'GESTOR').map(
+            (item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                title={collapsed ? item.label : undefined}
+                className={({ isActive }) =>
+                  [styles.navLink, isActive ? styles.navLinkActive : ''].filter(Boolean).join(' ')
+                }
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
+              </NavLink>
+            ),
+          )}
         </nav>
 
         <div className={styles.sidebarFooter}>

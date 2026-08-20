@@ -2,8 +2,22 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ErrorState, SkeletonList } from '../components/AsyncState';
-import { ApiError, Ativo, fetchAtivos } from '../lib/api';
+import { AssetStatus, StatusBadge } from '../components/StatusBadge';
+import {
+  ApiError,
+  Ativo,
+  PlanoManutencao,
+  StatusPlano,
+  fetchAtivos,
+  fetchPlanos,
+} from '../lib/api';
 import styles from './DashboardPage.module.css';
+
+const STATUS_MAP: Record<StatusPlano, AssetStatus> = {
+  EM_DIA: 'em-dia',
+  PROXIMO: 'proximo',
+  VENCIDO: 'vencido',
+};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
@@ -21,14 +35,18 @@ export function DashboardPage() {
   const podeGerenciar = usuario?.papel === 'SUPERVISOR' || usuario?.papel === 'GESTOR';
 
   const [ativos, setAtivos] = useState<Ativo[] | null>(null);
+  const [planos, setPlanos] = useState<PlanoManutencao[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   async function carregar() {
     setLoadError(null);
     setAtivos(null);
+    setPlanos(null);
     try {
       const dados = await fetchAtivos();
       setAtivos(dados);
+      const planosPorAtivo = await Promise.all(dados.map((ativo) => fetchPlanos(ativo.id)));
+      setPlanos(planosPorAtivo.flat());
     } catch (err) {
       setLoadError(err instanceof ApiError ? err.message : 'Erro inesperado ao carregar o painel.');
     }
@@ -55,6 +73,15 @@ export function DashboardPage() {
   }, [ativos]);
 
   const maiorContagem = porTipo[0]?.[1] ?? 1;
+
+  const porStatus = useMemo(() => {
+    if (!planos) return { EM_DIA: 0, PROXIMO: 0, VENCIDO: 0 };
+    const contagem = { EM_DIA: 0, PROXIMO: 0, VENCIDO: 0 };
+    for (const plano of planos) {
+      if (plano.status) contagem[plano.status]++;
+    }
+    return contagem;
+  }, [planos]);
 
   return (
     <div className={styles.page}>
@@ -201,30 +228,56 @@ export function DashboardPage() {
               )}
             </div>
 
-            <div className={styles.panel}>
-              <div className={styles.panelHeader}>
-                <span className={styles.panelTitle}>Por tipo</span>
+            <div className={styles.sideColumn}>
+              <div className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <span className={styles.panelTitle}>Status de manutenção</span>
+                  <Link to="/pendencias" className={styles.panelLink}>
+                    Ver pendências
+                  </Link>
+                </div>
+
+                <div className={styles.statusList}>
+                  <div className={styles.statusRow}>
+                    <StatusBadge status={STATUS_MAP.EM_DIA} />
+                    <span className={styles.statusCount}>{porStatus.EM_DIA}</span>
+                  </div>
+                  <div className={styles.statusRow}>
+                    <StatusBadge status={STATUS_MAP.PROXIMO} />
+                    <span className={styles.statusCount}>{porStatus.PROXIMO}</span>
+                  </div>
+                  <div className={styles.statusRow}>
+                    <StatusBadge status={STATUS_MAP.VENCIDO} />
+                    <span className={styles.statusCount}>{porStatus.VENCIDO}</span>
+                  </div>
+                </div>
               </div>
 
-              {porTipo.length === 0 && (
-                <span className={styles.greetingSubtitle}>Sem dados ainda.</span>
-              )}
+              <div className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <span className={styles.panelTitle}>Por tipo</span>
+                </div>
 
-              <div className={styles.breakdownList}>
-                {porTipo.map(([tipo, count]) => (
-                  <div key={tipo} className={styles.breakdownRow}>
-                    <div className={styles.breakdownLabelRow}>
-                      <span className={styles.breakdownLabel}>{tipo}</span>
-                      <span className={styles.breakdownCount}>{count}</span>
+                {porTipo.length === 0 && (
+                  <span className={styles.greetingSubtitle}>Sem dados ainda.</span>
+                )}
+
+                <div className={styles.breakdownList}>
+                  {porTipo.map(([tipo, count]) => (
+                    <div key={tipo} className={styles.breakdownRow}>
+                      <div className={styles.breakdownLabelRow}>
+                        <span className={styles.breakdownLabel}>{tipo}</span>
+                        <span className={styles.breakdownCount}>{count}</span>
+                      </div>
+                      <div className={styles.breakdownTrack}>
+                        <div
+                          className={styles.breakdownFill}
+                          style={{ width: `${(count / maiorContagem) * 100}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className={styles.breakdownTrack}>
-                      <div
-                        className={styles.breakdownFill}
-                        style={{ width: `${(count / maiorContagem) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>

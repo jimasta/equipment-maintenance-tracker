@@ -1,5 +1,6 @@
 import { IntervaloTipo } from '@prisma/client';
 import { prisma } from '../lib/prisma';
+import { notificarVencimento } from './notificationService';
 import { calcularProximoVencimento, calcularStatus } from './statusService';
 
 export interface PlanoInput {
@@ -57,10 +58,22 @@ export async function listPlanosPendentes() {
     include: INCLUDE_PARA_STATUS,
   });
 
-  return planos
+  const pendentes = planos
     .map(comStatus)
     .filter((p) => p.status === 'PROXIMO' || p.status === 'VENCIDO')
     .sort((a, b) => a.proximoVencimento!.getTime() - b.proximoVencimento!.getTime());
+
+  for (const plano of pendentes) {
+    notificarVencimento({
+      planoId: plano.id,
+      ativoId: plano.ativo.id,
+      ativoNome: plano.ativo.nome,
+      status: plano.status!,
+      proximoVencimento: plano.proximoVencimento!,
+    });
+  }
+
+  return pendentes;
 }
 
 export function getPlano(id: string) {

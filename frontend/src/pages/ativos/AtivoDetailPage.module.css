@@ -127,6 +127,60 @@
   color: var(--text-muted);
 }
 
+.historicoWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  margin-top: var(--space-4);
+}
+
+.historicoTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.historicoTable th {
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.historicoTable td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-hairline);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+
+.historicoTable tr:last-child td {
+  border-bottom: none;
+}
+
+.historicoDate {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.historicoObs {
+  color: var(--text-secondary);
+  max-width: 320px;
+}
+
+.historicoCusto {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .summary {
     flex-direction: column;

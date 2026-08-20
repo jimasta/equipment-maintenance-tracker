@@ -12,12 +12,14 @@ import {
   Ativo,
   PlanoInput,
   PlanoManutencao,
+  RegistroHistorico,
   RegistroInput,
   StatusPlano,
   createPlano,
   createRegistro,
   desativarPlano,
   fetchAtivo,
+  fetchHistoricoAtivo,
   fetchPlanos,
 } from '../../lib/api';
 import { PlanoForm } from './PlanoForm';
@@ -26,6 +28,10 @@ import styles from './AtivoDetailPage.module.css';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+}
+
+function formatCusto(custo: string) {
+  return Number(custo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 const STATUS_MAP: Record<StatusPlano, AssetStatus> = {
@@ -42,6 +48,7 @@ export function AtivoDetailPage() {
 
   const [ativo, setAtivo] = useState<Ativo | null>(null);
   const [planos, setPlanos] = useState<PlanoManutencao[] | null>(null);
+  const [historico, setHistorico] = useState<RegistroHistorico[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [drawerAberto, setDrawerAberto] = useState(false);
   const [planoEmExecucao, setPlanoEmExecucao] = useState<string | null>(null);
@@ -52,10 +59,16 @@ export function AtivoDetailPage() {
     setLoadError(null);
     setAtivo(null);
     setPlanos(null);
+    setHistorico(null);
     try {
-      const [ativoEncontrado, planosDoAtivo] = await Promise.all([fetchAtivo(id), fetchPlanos(id)]);
+      const [ativoEncontrado, planosDoAtivo, historicoDoAtivo] = await Promise.all([
+        fetchAtivo(id),
+        fetchPlanos(id),
+        fetchHistoricoAtivo(id),
+      ]);
       setAtivo(ativoEncontrado);
       setPlanos(planosDoAtivo);
+      setHistorico(historicoDoAtivo);
     } catch (err) {
       setLoadError(err instanceof ApiError ? err.message : 'Erro inesperado ao carregar o ativo.');
     }
@@ -201,6 +214,48 @@ export function AtivoDetailPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {ativo && (
+        <section>
+          <div className={styles.sectionHeader}>
+            <h2>Histórico de manutenção</h2>
+          </div>
+
+          {historico === null && <SkeletonList rows={2} />}
+
+          {historico !== null && historico.length === 0 && (
+            <EmptyState
+              title="Nenhuma manutenção registrada"
+              description="O histórico aparece aqui assim que uma execução for registrada em algum plano deste ativo."
+            />
+          )}
+
+          {historico !== null && historico.length > 0 && (
+            <div className={styles.historicoWrap}>
+              <table className={styles.historicoTable}>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Técnico</th>
+                    <th>Observações</th>
+                    <th>Custo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historico.map((registro) => (
+                    <tr key={registro.id}>
+                      <td className={styles.historicoDate}>{formatDate(registro.dataExecucao)}</td>
+                      <td>{registro.tecnico?.nome ?? '—'}</td>
+                      <td className={styles.historicoObs}>{registro.observacoes ?? '—'}</td>
+                      <td className={styles.historicoCusto}>{formatCusto(registro.custo)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
