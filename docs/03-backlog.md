@@ -78,11 +78,11 @@
 - US02a — Nome/papel do usuário no cabeçalho + logout
 
 **DoD do sprint:**
-- [ ] `docker-compose up` sobe API + banco sem erro
-- [ ] Login retorna JWT válido; rota protegida rejeita token ausente/inválido
-- [ ] Papel do usuário embutido no token e validado em pelo menos uma rota
-- [ ] Layout shell funciona em viewport de desktop e tablet (≥768px)
-- [ ] Tela de login segue os tokens de design (sem cor/fonte hardcoded)
+- [ ] `docker-compose up` sobe API + banco sem erro *(a revalidar — ambiente atual sem Docker disponível)*
+- [x] Login retorna JWT válido; rota protegida rejeita token ausente/inválido
+- [x] Papel do usuário embutido no token e validado em pelo menos uma rota
+- [x] Layout shell funciona em viewport de desktop e tablet (≥768px)
+- [x] Tela de login segue os tokens de design (sem cor/fonte hardcoded)
 
 ### Sprint 2 — Cadastro de Ativos e Planos
 **Objetivo:** permitir cadastro completo de ativo + plano de manutenção, com UI polida.
@@ -141,4 +141,15 @@
 Cada user story deve virar uma Issue no repositório, com label do épico correspondente (`ui-foundation`, `auth`, `ativos`, `manutencao`, `status-alertas`, `historico-relatorio`) e milestone do sprint (`Sprint 0`–`Sprint 4`).
 
 ## Próximo passo
-Etapa 4 — Setup inicial do código (scaffold): estrutura de pastas, lint/formatter, testes, CI básico via GitHub Actions.
+Sprint 1 concluído (auth API + UI). Revalidar `docker-compose up` fim a fim quando Docker estiver disponível; em seguida, iniciar Sprint 2 (cadastro de ativos e planos de manutenção).
+
+## Nota de ambiente — Docker
+O ambiente de desenvolvimento atual (sandbox de agente) não tem Docker/Docker Compose instalado, então `docker-compose up` não pôde ser exercitado diretamente aqui. Como alternativa equivalente, a validação de ponta a ponta do Sprint 1 foi feita com:
+- PostgreSQL portátil (binários EDB, sem instalação como serviço) com as migrations reais do Prisma aplicadas;
+- backend e frontend rodando via `npm run dev` (fora de containers), backend em `:3000`, frontend em `:5173`;
+- login real (`POST /auth/login`) com usuário seedado no banco, incluindo os casos de credenciais válidas, inválidas e rota protegida `/me` com/sem token — todos via `curl`;
+- fluxo de UI real (preenchimento do form de login → submit → redirecionamento para o dashboard autenticado, header com nome/papel e botão Sair) verificado com Chrome headless controlando o browser de fato, screenshots incluídas.
+
+Essa validação revelou e corrigiu um bug real: o backend não tinha CORS habilitado, então qualquer chamada do frontend (porta diferente do backend) era bloqueada pelo browser mesmo com tudo funcionando via `curl`. Corrigido em `backend/src/app.ts` com o pacote `cors`, liberando a origin configurável via `FRONTEND_URL` (default `http://localhost:5173`, também setado no `docker-compose.yml`).
+
+Ainda assim, recomenda-se rodar `docker-compose up` real em uma máquina com Docker Desktop pelo menos uma vez, para confirmar que os `Dockerfile`s constroem sem erro — isso não foi exercitado nesta validação.
