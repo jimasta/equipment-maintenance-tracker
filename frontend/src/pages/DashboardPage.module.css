@@ -31,6 +31,12 @@
   flex-direction: column;
   gap: var(--space-3);
   box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition: box-shadow 0.15s ease;
+}
+
+a.metricCard:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .metricIcon {
@@ -67,6 +73,26 @@
   grid-template-columns: 1.6fr 1fr;
   gap: var(--space-4);
   align-items: start;
+}
+
+.statusList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.statusCount {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .panel {
@@ -146,46 +172,44 @@
   flex-shrink: 0;
 }
 
-.breakdownList {
-  display: flex;
-  flex-direction: column;
+.monthlyChart {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: end;
   gap: var(--space-3);
+  height: 180px;
+  padding-top: var(--space-6);
 }
 
-.breakdownRow {
+.monthlyBar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  height: 100%;
 }
 
-.breakdownLabelRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+.monthlyCount {
   font-size: var(--text-sm);
-}
-
-.breakdownLabel {
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
-  font-weight: var(--weight-medium);
-}
-
-.breakdownCount {
-  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.breakdownTrack {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--surface-sunken);
-  overflow: hidden;
+.monthlyBarFill {
+  width: 100%;
+  max-width: 2.5rem;
+  min-height: 4px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--accent);
 }
 
-.breakdownFill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--accent);
+.monthlyLabel {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .ctaCard {

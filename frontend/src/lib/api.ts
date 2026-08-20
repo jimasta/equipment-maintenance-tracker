@@ -142,3 +142,23 @@ export function fetchRegistros(planoManutencaoId: string) {
 export function createRegistro(data: RegistroInput) {
   return request<RegistroManutencao>('/registros', { method: 'POST', body: JSON.stringify(data) });
 }
+
+export interface RegistroHistorico extends RegistroManutencao {
+  planoManutencao: { id: string; intervaloTipo: IntervaloTipo; intervaloValor: number };
+}
+
+export function fetchHistoricoAtivo(ativoId: string) {
+  return request<RegistroHistorico[]>(`/ativos/${ativoId}/historico`);
+}
+
+export interface RelatorioCustoAtivo {
+  ativoId: string;
+  ativoNome: string;
+  ativoTipo: string;
+  quantidadeManutencoes: number;
+  custoTotal: number;
+}
+
+export function fetchRelatorioCustos() {
+  return request<RelatorioCustoAtivo[]>('/relatorios/custos');
+}

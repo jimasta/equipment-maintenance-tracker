@@ -65,11 +65,16 @@ function normalize(tipo: string) {
   return tipo.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
+export function AssetTypeIcon({ tipo }: { tipo: string }) {
+  return ICONS[normalize(tipo)] ?? DEFAULT_ICON;
+}
+
 export function AssetTypeTag({ tipo }: { tipo: string }) {
-  const icon = ICONS[normalize(tipo)] ?? DEFAULT_ICON;
   return (
     <span className={styles.tag}>
-      <span className={styles.iconWrap}>{icon}</span>
+      <span className={styles.iconWrap}>
+        <AssetTypeIcon tipo={tipo} />
+      </span>
       {tipo}
     </span>
   );

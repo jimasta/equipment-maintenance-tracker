@@ -2,8 +2,45 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ErrorState, SkeletonList } from '../components/AsyncState';
-import { ApiError, Ativo, fetchAtivos } from '../lib/api';
+import { AssetTypeIcon } from '../components/AssetTypeTag';
+import { AssetStatus, StatusBadge } from '../components/StatusBadge';
+import {
+  ApiError,
+  Ativo,
+  PlanoManutencao,
+  PlanoPendente,
+  RegistroHistorico,
+  StatusPlano,
+  fetchAtivos,
+  fetchHistoricoAtivo,
+  fetchPlanos,
+  fetchPlanosPendentes,
+} from '../lib/api';
 import styles from './DashboardPage.module.css';
+
+const DIAS_JANELA_VENCIMENTO = 30;
+const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+const MESES_ABREV = [
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
+];
+
+const STATUS_MAP: Record<StatusPlano, AssetStatus> = {
+  EM_DIA: 'em-dia',
+  PROXIMO: 'proximo',
+  VENCIDO: 'vencido',
+};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
@@ -21,14 +58,28 @@ export function DashboardPage() {
   const podeGerenciar = usuario?.papel === 'SUPERVISOR' || usuario?.papel === 'GESTOR';
 
   const [ativos, setAtivos] = useState<Ativo[] | null>(null);
+  const [planos, setPlanos] = useState<PlanoManutencao[] | null>(null);
+  const [pendentes, setPendentes] = useState<PlanoPendente[] | null>(null);
+  const [historico, setHistorico] = useState<RegistroHistorico[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   async function carregar() {
     setLoadError(null);
     setAtivos(null);
+    setPlanos(null);
+    setPendentes(null);
+    setHistorico(null);
     try {
       const dados = await fetchAtivos();
       setAtivos(dados);
+      const [planosPorAtivo, pendentesDados, historicoPorAtivo] = await Promise.all([
+        Promise.all(dados.map((ativo) => fetchPlanos(ativo.id))),
+        fetchPlanosPendentes(),
+        Promise.all(dados.map((ativo) => fetchHistoricoAtivo(ativo.id))),
+      ]);
+      setPlanos(planosPorAtivo.flat());
+      setPendentes(pendentesDados);
+      setHistorico(historicoPorAtivo.flat());
     } catch (err) {
       setLoadError(err instanceof ApiError ? err.message : 'Erro inesperado ao carregar o painel.');
     }
@@ -47,14 +98,50 @@ export function DashboardPage() {
     return Array.from(contagem.entries()).sort((a, b) => b[1] - a[1]);
   }, [ativos]);
 
-  const recentes = useMemo(() => {
-    if (!ativos) return [];
-    return [...ativos]
-      .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
-      .slice(0, 5);
-  }, [ativos]);
+  const proximosDoVencimento = useMemo(() => {
+    if (!pendentes) return [];
+    const limite = Date.now() + DIAS_JANELA_VENCIMENTO * MS_POR_DIA;
+    return pendentes
+      .filter((p) => p.proximoVencimento && new Date(p.proximoVencimento).getTime() <= limite)
+      .sort(
+        (a, b) =>
+          new Date(a.proximoVencimento!).getTime() - new Date(b.proximoVencimento!).getTime(),
+      )
+      .slice(0, 6);
+  }, [pendentes]);
 
-  const maiorContagem = porTipo[0]?.[1] ?? 1;
+  const porStatus = useMemo(() => {
+    if (!planos) return { EM_DIA: 0, PROXIMO: 0, VENCIDO: 0 };
+    const contagem = { EM_DIA: 0, PROXIMO: 0, VENCIDO: 0 };
+    for (const plano of planos) {
+      if (plano.status) contagem[plano.status]++;
+    }
+    return contagem;
+  }, [planos]);
+
+  const manutencoesPorMes = useMemo(() => {
+    if (!historico) return [];
+    const hoje = new Date();
+    const meses: { chave: string; label: string; count: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      meses.push({
+        chave: `${data.getFullYear()}-${data.getMonth()}`,
+        label: MESES_ABREV[data.getMonth()],
+        count: 0,
+      });
+    }
+    const porChave = new Map(meses.map((m) => [m.chave, m]));
+    for (const registro of historico) {
+      const data = new Date(registro.dataExecucao);
+      const chave = `${data.getFullYear()}-${data.getMonth()}`;
+      const mes = porChave.get(chave);
+      if (mes) mes.count++;
+    }
+    return meses;
+  }, [historico]);
+
+  const maiorContagemMes = Math.max(1, ...manutencoesPorMes.map((m) => m.count));
 
   return (
     <div className={styles.page}>
@@ -120,71 +207,45 @@ export function DashboardPage() {
               <span className={styles.metricLabel}>Ativos cadastrados</span>
             </div>
 
-            <div className={styles.metricCard}>
-              <span className={styles.metricIcon}>
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path
-                    d="M4 4v16h16"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M7 15l4-5 3 3 5-7"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              <span className={styles.metricValue}>{porTipo.length}</span>
-              <span className={styles.metricLabel}>Tipos de ativo</span>
-            </div>
-
-            <div className={styles.metricCard}>
-              <span className={styles.metricIcon}>
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
-                  <path
-                    d="M12 7.5V12l3 2"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              <span className={styles.metricValue}>
-                {recentes.length > 0 ? formatDate(recentes[0].criadoEm) : '—'}
-              </span>
-              <span className={styles.metricLabel}>Último cadastro</span>
-            </div>
+            {porTipo.map(([tipo, count]) => (
+              <Link
+                key={tipo}
+                to={`/ativos?tipo=${encodeURIComponent(tipo)}`}
+                className={styles.metricCard}
+              >
+                <span className={styles.metricIcon}>
+                  <AssetTypeIcon tipo={tipo} />
+                </span>
+                <span className={styles.metricValue}>{count}</span>
+                <span className={styles.metricLabel}>{tipo}</span>
+              </Link>
+            ))}
           </div>
 
           <div className={styles.mainGrid}>
             <div className={styles.panel}>
               <div className={styles.panelHeader}>
-                <span className={styles.panelTitle}>Ativos recentes</span>
-                <Link to="/ativos" className={styles.panelLink}>
+                <span className={styles.panelTitle}>Ativos próximos do vencimento</span>
+                <Link to="/pendencias" className={styles.panelLink}>
                   Ver todos
                 </Link>
               </div>
 
-              {recentes.length === 0 && (
-                <span className={styles.greetingSubtitle}>Nenhum ativo cadastrado ainda.</span>
+              {proximosDoVencimento.length === 0 && (
+                <span className={styles.greetingSubtitle}>
+                  Nenhum vencimento nos próximos {DIAS_JANELA_VENCIMENTO} dias.
+                </span>
               )}
 
-              {recentes.map((ativo) => (
-                <Link key={ativo.id} to={`/ativos/${ativo.id}`} className={styles.assetRow}>
+              {proximosDoVencimento.map((plano) => (
+                <Link key={plano.id} to={`/ativos/${plano.ativo.id}`} className={styles.assetRow}>
                   <div className={styles.assetRowMain}>
-                    <span className={styles.assetRowName}>{ativo.nome}</span>
-                    <span className={styles.assetRowMeta}>
-                      {ativo.tipo} · {ativo.localizacao}
-                    </span>
+                    <span className={styles.assetRowName}>{plano.ativo.nome}</span>
+                    <StatusBadge status={STATUS_MAP[plano.status!]} />
                   </div>
-                  <span className={styles.assetRowDate}>{formatDate(ativo.criadoEm)}</span>
+                  <span className={styles.assetRowDate}>
+                    {formatDate(plano.proximoVencimento!)}
+                  </span>
                 </Link>
               ))}
 
@@ -203,30 +264,57 @@ export function DashboardPage() {
 
             <div className={styles.panel}>
               <div className={styles.panelHeader}>
-                <span className={styles.panelTitle}>Por tipo</span>
+                <span className={styles.panelTitle}>Status de manutenção</span>
+                <Link to="/pendencias" className={styles.panelLink}>
+                  Ver pendências
+                </Link>
               </div>
 
-              {porTipo.length === 0 && (
-                <span className={styles.greetingSubtitle}>Sem dados ainda.</span>
-              )}
+              <div className={styles.statusList}>
+                <div className={styles.statusRow}>
+                  <StatusBadge status={STATUS_MAP.EM_DIA} />
+                  <span className={styles.statusCount}>{porStatus.EM_DIA}</span>
+                </div>
+                <div className={styles.statusRow}>
+                  <StatusBadge status={STATUS_MAP.PROXIMO} />
+                  <span className={styles.statusCount}>{porStatus.PROXIMO}</span>
+                </div>
+                <div className={styles.statusRow}>
+                  <StatusBadge status={STATUS_MAP.VENCIDO} />
+                  <span className={styles.statusCount}>{porStatus.VENCIDO}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-              <div className={styles.breakdownList}>
-                {porTipo.map(([tipo, count]) => (
-                  <div key={tipo} className={styles.breakdownRow}>
-                    <div className={styles.breakdownLabelRow}>
-                      <span className={styles.breakdownLabel}>{tipo}</span>
-                      <span className={styles.breakdownCount}>{count}</span>
-                    </div>
-                    <div className={styles.breakdownTrack}>
-                      <div
-                        className={styles.breakdownFill}
-                        style={{ width: `${(count / maiorContagem) * 100}%` }}
-                      />
-                    </div>
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <span className={styles.panelTitle}>Manutenções por mês</span>
+            </div>
+
+            {historico !== null && historico.length === 0 && (
+              <span className={styles.greetingSubtitle}>Nenhuma manutenção registrada ainda.</span>
+            )}
+
+            {historico !== null && historico.length > 0 && (
+              <div
+                className={styles.monthlyChart}
+                role="img"
+                aria-label="Gráfico de manutenções realizadas por mês"
+              >
+                {manutencoesPorMes.map((mes) => (
+                  <div key={mes.chave} className={styles.monthlyBar}>
+                    <span className={styles.monthlyCount}>{mes.count}</span>
+                    <div
+                      className={styles.monthlyBarFill}
+                      style={{ height: `${(mes.count / maiorContagemMes) * 100}%` }}
+                      title={`${mes.label}: ${mes.count} manutenção${mes.count === 1 ? '' : 'ões'}`}
+                    />
+                    <span className={styles.monthlyLabel}>{mes.label}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            )}
           </div>
         </>
       )}

@@ -123,11 +123,11 @@
 - US12a — Gráfico de custo (paleta acessível, rótulos diretos)
 
 **DoD do sprint:**
-- [ ] Painel destaca ativos "Próximo do vencimento" com base no job/consulta de status
-- [ ] Dashboard inicial mostra contagem de ativos por status ao fazer login
-- [ ] Tela de histórico lista todos os `RegistroManutencao` de um ativo, ordenados por data
-- [ ] Relatório agrega custo total e contagem de manutenções por ativo, com gráfico e tabela
-- [ ] Todos os 4 critérios de aceite do MVP (docs/01-discovery.md) revalidados e passando
+- [x] Painel destaca ativos "Próximo do vencimento" com base no job/consulta de status — página `/pendencias` (Sprint 3) + `NotificationService` (ADR-003) disparado a cada leitura de `GET /planos/pendentes`
+- [x] Dashboard inicial mostra contagem de ativos por status ao fazer login — painel "Status de manutenção" na `DashboardPage`
+- [x] Tela de histórico lista todos os `RegistroManutencao` de um ativo, ordenados por data — seção "Histórico de manutenção" em `AtivoDetailPage`, via `GET /ativos/:id/historico`
+- [x] Relatório agrega custo total e contagem de manutenções por ativo, com gráfico e tabela — `RelatoriosPage` (`/relatorios`, restrita a Gestor), `GET /relatorios/custos`
+- [x] Todos os 4 critérios de aceite do MVP (docs/01-discovery.md) revalidados e passando — ver nota de validação abaixo
 
 ---
 
@@ -174,6 +174,28 @@ Revalidado visualmente (Postgres real + Chrome headless) em desktop expandido, c
 **Frontend:** `StatusBadge` (já existente desde o Sprint 0, nunca usado até agora) finalmente aplicado nos cards de plano (`AtivoDetailPage`) e nos cards de pendência (`PendenciasPage`, nova rota `/pendencias` com item de menu na sidebar). `RegistroForm` em drawer lateral, consistente com o padrão de `AtivoForm`/`PlanoForm`.
 
 Validado de ponta a ponta com Postgres real e Chrome headless: 3 ativos seedados com planos vencido/próximo/em-dia, confirmado visualmente na tela de Pendências (card do vencido com borda vermelha destacada), registrada uma execução real via formulário, e confirmado que o status recalculou de Vencido para Em dia (e que o item saiu da lista de pendências) — sem mocks, ciclo completo através do banco.
+
+## Sprint 4 — decisões e implementação
+
+**Alerta automático (US10, ADR-003):** o `NotificationService` (`backend/src/services/notificationService.ts`) é um mock/log — sem SMTP/SendGrid, conforme o ADR. Disparado no momento da leitura: toda chamada a `GET /planos/pendentes` (usada pela tela de Pendências e, indiretamente, pelo Dashboard) itera os planos Próximo/Vencido e loga um alerta estruturado por plano. Não há job/scheduler — o gatilho é "toda leitura da lista de pendências", decisão explícita para não adicionar infra de cron ao MVP.
+
+**Histórico (US11):** `GET /ativos/:id/historico` agrega `RegistroManutencao` de **todos os planos** do ativo (não só de um plano específico), ordenados por data decrescente — atende literalmente "histórico completo de manutenções de um ativo em uma única tela". Nova seção na `AtivoDetailPage`, abaixo dos cards de plano.
+
+**Relatório de custo (US12/US12a):** `GET /relatorios/custos`, restrito a `GESTOR` (a US é "como gestor..."), agrega custo total e contagem de manutenções por ativo entre **todos os ativos** (não por plano) — é o relatório cross-ativo que a US pede, para decisão de substituição. O gráfico segue o método da skill `dataviz`: a forma foi escolhida pelo job dos dados ("comparar magnitude, ordenar do maior pro menor" → barra horizontal), cor sequencial de hue único (o teal já estabelecido como `--accent` do design system, sem introduzir paleta nova), valor direto no fim de cada barra, tabela complementar abaixo do gráfico. Item de menu "Relatórios" na sidebar só aparece para usuários com papel Gestor.
+
+**Dashboard (US10a):** novo painel "Status de manutenção" mostra a contagem Em dia/Próximo/Vencido, calculada a partir de todos os planos de todos os ativos (busca client-side via `Promise.all` sobre `GET /planos?ativoId=`, aceitável no volume do MVP). Link direto para a tela de Pendências.
+
+Com este sprint, os 4 critérios de aceite do MVP (`docs/01-discovery.md`) estão implementados e foram revalidados manualmente com dados reais: (1) cadastro de ativo + plano em menos de 2 minutos — Sprint 2; (2) status correto baseado na data atual — Sprint 3, reconfirmado aqui; (3) alerta disparado automaticamente — confirmado via log real do `NotificationService` ao acessar `/pendencias`; (4) histórico completo numa única tela — confirmado na `AtivoDetailPage` com um registro real criado nos testes deste sprint.
+
+## Ajuste de UI pós-MVP — paleta Teamio e refinamentos do Painel
+Após o MVP fechado (Sprint 4), nova rodada de feedback visual trouxe uma referência de dashboard ("Teamio"): fundo pêssego/creme pastel, cards brancos, accent preto sólido em vez de cor. Terceira revisão de paleta do projeto (histórico: laranja industrial → teal → preto):
+
+- **`tokens.css` reescrito**: `--neutral-*` passou de escala cinza-fria para escala pêssego/creme quente (`--neutral-50: #faf3ea` até `--neutral-900: #1c1712`); `--brand-*` (accent) passou de teal para quase-preto (`--brand-600: #1a1a1a`), resolvendo por completo a preocupação histórica de "accent perto do âmbar de status", já que preto não está na faixa de matiz nenhuma.
+- **Sidebar** deixou de ser a superfície terracota escura da rodada anterior e passou a usar um tom mais saturado da mesma família pêssego, com texto escuro — sem mais contraste dark forte, mais alinhado à referência (que não tem sidebar escura).
+- **Painel (Dashboard) redesenhado**: card totalizador por tipo de ativo (clicável, filtra `/ativos?tipo=`) substituindo a antiga lista lateral "Por tipo"; "Ativos recentes" virou "Ativos próximos do vencimento" (usa `GET /planos/pendentes`, filtrado para `proximoVencimento` dentro de 30 dias — inclui os já vencidos, por decisão explícita); novo gráfico de barras "Manutenções por mês" (últimos 6 meses, a partir do histórico agregado de todos os ativos).
+- **Achado de performance (não corrigido, fora do escopo pedido):** o carregamento do Dashboard agora dispara ~51 requisições HTTP (uma `GET /planos` e uma `GET /ativos/:id/historico` por ativo, via `Promise.all`). Funciona, mas não escala bem — resolver exigiria endpoints agregados novos no backend (ex: `GET /planos?ativoId=a,b,c` em lote, ou um endpoint de dashboard dedicado). Registrado aqui para decisão futura.
+
+Validado visualmente com Postgres real (25 ativos seedados, 5 de cada tipo) e Chrome headless — confirmado que os cards por tipo, a lista de vencimentos e o gráfico mensal refletem dados reais persistidos no banco.
 
 ## Nota de ambiente — Docker
 O ambiente de desenvolvimento atual (sandbox de agente) não tem Docker/Docker Compose instalado, então `docker-compose up` não pôde ser exercitado diretamente aqui. Como alternativa equivalente, a validação de ponta a ponta do Sprint 1 foi feita com:

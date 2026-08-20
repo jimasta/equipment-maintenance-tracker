@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { EmptyState, ErrorState, SkeletonList } from '../../components/AsyncState';
 import { AssetTypeTag } from '../../components/AssetTypeTag';
@@ -21,10 +21,14 @@ export function AtivosPage() {
   const { usuario } = useAuth();
   const podeGerenciar = usuario?.papel === 'SUPERVISOR' || usuario?.papel === 'GESTOR';
 
+  const [searchParams] = useSearchParams();
+
   const [ativos, setAtivos] = useState<Ativo[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
-  const [tipoFiltro, setTipoFiltro] = useState<string | null>(null);
+  const [tipoFiltro, setTipoFiltro] = useState<string | null>(
+    () => searchParams.get('tipo') ?? null,
+  );
 
   const [drawerAberto, setDrawerAberto] = useState(false);
   const [ativoEmEdicao, setAtivoEmEdicao] = useState<Ativo | undefined>(undefined);

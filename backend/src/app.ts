@@ -5,6 +5,7 @@ import { authRouter } from './routes/auth';
 import { meRouter } from './routes/me';
 import { planosRouter } from './routes/planos';
 import { registrosRouter } from './routes/registros';
+import { relatoriosRouter } from './routes/relatorios';
 
 export function createApp(): Express {
   const app = express();
@@ -20,6 +21,7 @@ export function createApp(): Express {
   app.use('/ativos', ativosRouter);
   app.use('/planos', planosRouter);
   app.use('/registros', registrosRouter);
+  app.use('/relatorios', relatoriosRouter);
 
   return app;
 }

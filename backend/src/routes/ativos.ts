@@ -7,6 +7,7 @@ import {
   updateAtivo,
   validateAtivoInput,
 } from '../services/ativoService';
+import { listRegistrosPorAtivo } from '../services/registroService';
 
 export const ativosRouter = Router();
 
@@ -25,6 +26,16 @@ ativosRouter.get('/:id', async (req, res) => {
     return;
   }
   res.json(ativo);
+});
+
+ativosRouter.get('/:id/historico', async (req, res) => {
+  const ativo = await getAtivo(req.params.id);
+  if (!ativo) {
+    res.status(404).json({ error: 'Ativo não encontrado' });
+    return;
+  }
+  const registros = await listRegistrosPorAtivo(req.params.id);
+  res.json(registros);
 });
 
 ativosRouter.post('/', requireRole('SUPERVISOR', 'GESTOR'), async (req, res) => {
