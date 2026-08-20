@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Papel {
+  TECNICO
+  SUPERVISOR
+  GESTOR
+}
+
+enum IntervaloTipo {
+  DIAS
+  HORAS_USO
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  papel     Papel
+  criadoEm  DateTime @default(now())
+
+  registros RegistroManutencao[]
+}
+
+model Ativo {
+  id             String   @id @default(uuid())
+  nome           String
+  tipo           String
+  localizacao    String
+  dataAquisicao  DateTime
+  criadoEm       DateTime @default(now())
+
+  planos PlanoManutencao[]
+}
+
+model PlanoManutencao {
+  id             String        @id @default(uuid())
+  ativoId        String
+  ativo          Ativo         @relation(fields: [ativoId], references: [id])
+  intervaloTipo  IntervaloTipo
+  intervaloValor Int
+  estaAtivo      Boolean       @default(true)
+
+  registros RegistroManutencao[]
+}
+
+model RegistroManutencao {
+  id                String          @id @default(uuid())
+  planoManutencaoId String
+  planoManutencao   PlanoManutencao @relation(fields: [planoManutencaoId], references: [id])
+  tecnicoId         String
+  tecnico           Usuario         @relation(fields: [tecnicoId], references: [id])
+  dataExecucao      DateTime
+  observacoes       String?
+  custo             Decimal
+  criadoEm          DateTime        @default(now())
+}
