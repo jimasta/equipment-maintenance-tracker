@@ -36,13 +36,13 @@ Empresas industriais (oil & gas, agribusiness) operam ativos críticos — bomba
 Contexto completo de negócio, personas e requisitos em [`docs/01-discovery.md`](docs/01-discovery.md).
 
 ## ✨ Funcionalidades
-Status atual: Sprint 1 concluído ([`docs/03-backlog.md`](docs/03-backlog.md)) — autenticação completa (API + UI).
+Status atual: Sprint 2 concluído ([`docs/03-backlog.md`](docs/03-backlog.md)) — autenticação e cadastro de ativos/planos completos.
 
 - [x] Design system (tokens de cor/tipografia, tema claro/escuro, componentes base)
 - [x] Login (API) e controle de acesso por papel (Técnico / Supervisor / Gestor) — `POST /auth/login`, JWT, middleware `requireAuth`/`requireRole`
 - [x] Tela de login e layout shell responsivo (frontend) — validação inline, header com nome/papel do usuário e logout, rota protegida com redirecionamento
-- [ ] Cadastro e listagem de ativos
-- [ ] Cadastro de plano de manutenção preventiva (por dias ou horas de uso)
+- [x] Cadastro e listagem de ativos — busca por nome/localização, filtro por tipo, formulário em painel lateral com validação inline, edição restrita a Supervisor/Gestor
+- [x] Cadastro de plano de manutenção preventiva (por dias ou horas de uso) — vinculado ao ativo, com desativação sem apagar histórico
 - [ ] Registro de execução de manutenção (data, técnico, custo, observações)
 - [ ] Status automático por ativo: Em dia / Próximo do vencimento / Vencido
 - [ ] Painel de alertas e dashboard inicial
@@ -57,6 +57,8 @@ Resumo do fluxo: SPA React consome uma API REST (Express), que aplica regras de 
 Autenticação: `POST /auth/login` valida e-mail/senha (bcrypt) e emite um JWT (8h de validade) contendo `id`, `nome` e `papel` do usuário. Rotas protegidas usam o middleware `requireAuth` (exige token válido) e `requireRole(...papeis)` (restringe por papel) em `backend/src/middleware/auth.ts`.
 
 No frontend, `AuthProvider` (`frontend/src/auth/AuthContext.tsx`) guarda o token em `localStorage`, valida a sessão via `GET /me` ao carregar a aplicação e expõe `login`/`logout`. `RequireAuth` protege rotas privadas redirecionando para `/login` (preservando a rota de origem para retorno pós-login).
+
+Ativos e planos: `GET/POST/PUT /ativos` e `GET/POST /planos` + `PATCH /planos/:id/desativar`, todos atrás de `requireAuth`; criação/edição restrita a `SUPERVISOR`/`GESTOR` via `requireRole` (leitura liberada a qualquer papel autenticado, incluindo Técnico). No frontend, `AtivosPage` (busca, filtro por tipo, tabela) e `AtivoDetailPage` (planos de manutenção do ativo) consomem essas rotas via `frontend/src/lib/api.ts`; formulários abrem em um painel lateral (`Drawer`) para manter o contexto da listagem.
 
 ## 🛠️ Stack Tecnológica
 
@@ -112,17 +114,20 @@ equipment-maintenance-tracker/
 ├── backend/
 │   ├── prisma/           # schema.prisma (modelo de dados) + migrations/
 │   └── src/
-│       ├── routes/       # auth.ts (login), me.ts (exemplo de rota protegida)
+│       ├── routes/       # auth.ts (login), me.ts, ativos.ts, planos.ts
 │       ├── middleware/   # requireAuth, requireRole
-│       ├── services/     # authService.ts (hash de senha, JWT)
+│       ├── services/     # authService, ativoService, planoService
 │       └── lib/          # prisma.ts (client singleton)
 ├── frontend/
 │   └── src/
 │       ├── auth/         # AuthContext (sessão/token), RequireAuth (guarda de rota)
 │       ├── layout/       # AppShell (header + navegação responsiva)
-│       ├── pages/        # LoginPage, DashboardPage
+│       ├── pages/
+│       │   ├── ativos/   # AtivosPage, AtivoDetailPage, AtivoForm, PlanoForm
+│       │   ├── LoginPage.tsx
+│       │   └── DashboardPage.tsx
 │       ├── lib/          # api.ts (cliente HTTP)
-│       ├── components/   # componentes de UI (Button, StatusBadge, Input, Select, ...)
+│       ├── components/   # Button, StatusBadge, Input, Select, Drawer, AsyncState, Toast, ...
 │       └── styles/       # tokens.css, globals.css
 ├── docs/
 │   ├── 01-discovery.md
@@ -151,13 +156,13 @@ cd backend && npm test
 # Frontend
 cd frontend && npm test
 ```
-Cobertura atual (backend): smoke test de `/health`, `authService` (hash/verificação de senha, emissão/validação de JWT) e rotas de autenticação (`/auth/login` com credenciais válidas/inválidas, `/me` com e sem token) — 9 testes automatizados, todos com Prisma mockado. Frontend: redirecionamento de rota protegida para `/login`, validação inline de formulário vazio e exibição de erro de credenciais inválidas (API mockada). Cobertura por feature será expandida a cada sprint, conforme a Definition of Done em [`docs/03-backlog.md`](docs/03-backlog.md).
+Cobertura atual (backend): smoke test de `/health`; `authService` (hash/verificação de senha, emissão/validação de JWT); rotas de autenticação (`/auth/login` com credenciais válidas/inválidas, `/me` com e sem token); rotas de ativos (listagem, criação com validação, controle por papel, 404 em edição inexistente); rotas de planos (validação de intervalo, vínculo com ativo existente, controle por papel, desativação) — 20 testes automatizados, todos com Prisma mockado. Frontend: redirecionamento de rota protegida, validação inline de login e do formulário de ativo, listagem/busca/estado vazio de `AtivosPage` — 6 testes automatizados. Cobertura por feature será expandida a cada sprint, conforme a Definition of Done em [`docs/03-backlog.md`](docs/03-backlog.md).
 
-Validação end-to-end (login real, JWT real, rota protegida, navegação autenticada) foi refeita com PostgreSQL real e o fluxo de UI dirigido por browser de verdade — ver detalhes em [`docs/03-backlog.md`](docs/03-backlog.md#nota-de-ambiente--docker). Essa validação revelou e corrigiu a ausência de CORS no backend, que bloquearia toda chamada do frontend em produção/dev com portas ou domínios diferentes.
+Validação end-to-end (login real, JWT real, CRUD de ativo e plano de manutenção, navegação autenticada) foi feita com PostgreSQL real e o fluxo de UI dirigido por browser de verdade, com screenshots do resultado — ver detalhes em [`docs/03-backlog.md`](docs/03-backlog.md#nota-de-ambiente--docker). No Sprint 1 essa validação revelou e corrigiu a ausência de CORS no backend, que bloquearia toda chamada do frontend em produção/dev com portas ou domínios diferentes.
 
 ## 🗺️ Roadmap
 - [x] Sprint 1 — Autenticação completa (API + layout shell responsivo + tela de login)
-- [ ] Sprint 2 — Cadastro de ativos e planos de manutenção
+- [x] Sprint 2 — Cadastro de ativos e planos de manutenção
 - [ ] Sprint 3 — Registro de execução e cálculo de status
 - [ ] Sprint 4 — Painel de alertas, histórico e relatório de custo
 - [ ] Deploy e release `v1.0.0`

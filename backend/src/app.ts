@@ -1,7 +1,9 @@
 import cors from 'cors';
 import express, { Express, Request, Response } from 'express';
+import { ativosRouter } from './routes/ativos';
 import { authRouter } from './routes/auth';
 import { meRouter } from './routes/me';
+import { planosRouter } from './routes/planos';
 
 export function createApp(): Express {
   const app = express();
@@ -14,6 +16,8 @@ export function createApp(): Express {
 
   app.use('/auth', authRouter);
   app.use(meRouter);
+  app.use('/ativos', ativosRouter);
+  app.use('/planos', planosRouter);
 
   return app;
 }

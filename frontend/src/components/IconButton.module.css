@@ -1,0 +1,22 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+}
+
+.button svg {
+  width: 1rem;
+  height: 1rem;
+}

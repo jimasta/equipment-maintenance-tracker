@@ -95,10 +95,10 @@
 - US06 — Desativar plano sem apagar histórico
 
 **DoD do sprint:**
-- [ ] CRUD de Ativo completo com validação de campos obrigatórios
-- [ ] Plano de manutenção vinculado corretamente ao Ativo (FK)
-- [ ] Componentes de loading/vazio/erro reaproveitados em pelo menos 2 telas
-- [ ] Critério de aceite do MVP: cadastro de ativo + plano em menos de 2 minutos (validado manualmente)
+- [x] CRUD de Ativo completo com validação de campos obrigatórios
+- [x] Plano de manutenção vinculado corretamente ao Ativo (FK)
+- [x] Componentes de loading/vazio/erro reaproveitados em pelo menos 2 telas (`SkeletonList`/`EmptyState`/`ErrorState` usados em `AtivosPage` e `AtivoDetailPage`)
+- [x] Critério de aceite do MVP: cadastro de ativo + plano em menos de 2 minutos (validado manualmente com Postgres real e browser real — ver nota de ambiente do Sprint 1)
 
 ### Sprint 3 — Execução e Status
 **Objetivo:** registrar manutenções e calcular status derivado (RF04, ADR-002), com destaque visual de urgência.
@@ -141,7 +141,7 @@
 Cada user story deve virar uma Issue no repositório, com label do épico correspondente (`ui-foundation`, `auth`, `ativos`, `manutencao`, `status-alertas`, `historico-relatorio`) e milestone do sprint (`Sprint 0`–`Sprint 4`).
 
 ## Próximo passo
-Sprint 1 concluído (auth API + UI). Revalidar `docker-compose up` fim a fim quando Docker estiver disponível; em seguida, iniciar Sprint 2 (cadastro de ativos e planos de manutenção).
+Sprint 1 e Sprint 2 concluídos. Revalidar `docker-compose up` fim a fim quando Docker estiver disponível; em seguida, iniciar Sprint 3 (registro de execução de manutenção e cálculo de status Em dia/Próximo/Vencido — RF04, ADR-002).
 
 ## Nota de ambiente — Docker
 O ambiente de desenvolvimento atual (sandbox de agente) não tem Docker/Docker Compose instalado, então `docker-compose up` não pôde ser exercitado diretamente aqui. Como alternativa equivalente, a validação de ponta a ponta do Sprint 1 foi feita com:
@@ -151,5 +151,7 @@ O ambiente de desenvolvimento atual (sandbox de agente) não tem Docker/Docker C
 - fluxo de UI real (preenchimento do form de login → submit → redirecionamento para o dashboard autenticado, header com nome/papel e botão Sair) verificado com Chrome headless controlando o browser de fato, screenshots incluídas.
 
 Essa validação revelou e corrigiu um bug real: o backend não tinha CORS habilitado, então qualquer chamada do frontend (porta diferente do backend) era bloqueada pelo browser mesmo com tudo funcionando via `curl`. Corrigido em `backend/src/app.ts` com o pacote `cors`, liberando a origin configurável via `FRONTEND_URL` (default `http://localhost:5173`, também setado no `docker-compose.yml`).
+
+O Sprint 2 (cadastro de ativos e planos de manutenção) foi validado com o mesmo método: Postgres portátil, backend/frontend reais, e um fluxo completo dirigido por Chrome headless — login, criação de ativo via drawer, navegação até o detalhe do ativo, criação de um plano de manutenção (90 dias) e conferência do card do plano e do toast de sucesso, tudo com dados reais persistidos no banco (sem mocks). Também verificado em largura tablet (768px).
 
 Ainda assim, recomenda-se rodar `docker-compose up` real em uma máquina com Docker Desktop pelo menos uma vez, para confirmar que os `Dockerfile`s constroem sem erro — isso não foi exercitado nesta validação.

@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { RequireAuth } from './auth/RequireAuth';
 import { AppShell } from './layout/AppShell';
+import { AtivoDetailPage } from './pages/ativos/AtivoDetailPage';
+import { AtivosPage } from './pages/ativos/AtivosPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 
@@ -19,6 +21,8 @@ export function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="ativos" element={<AtivosPage />} />
+          <Route path="ativos/:id" element={<AtivoDetailPage />} />
         </Route>
       </Routes>
     </AuthProvider>

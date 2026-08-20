@@ -26,6 +26,14 @@ export function AppShell() {
           >
             Painel
           </NavLink>
+          <NavLink
+            to="/ativos"
+            className={({ isActive }) =>
+              [styles.navLink, isActive ? styles.navLinkActive : ''].filter(Boolean).join(' ')
+            }
+          >
+            Ativos
+          </NavLink>
         </nav>
         <div className={styles.userMenu}>
           {usuario && (

@@ -40,3 +40,67 @@ export function login(email: string, senha: string) {
 export function fetchMe() {
   return request<Omit<Usuario, 'email'>>('/me');
 }
+
+export interface Ativo {
+  id: string;
+  nome: string;
+  tipo: string;
+  localizacao: string;
+  dataAquisicao: string;
+  criadoEm: string;
+}
+
+export interface AtivoInput {
+  nome: string;
+  tipo: string;
+  localizacao: string;
+  dataAquisicao: string;
+}
+
+export function fetchAtivos(filtros: { tipo?: string; localizacao?: string } = {}) {
+  const params = new URLSearchParams();
+  if (filtros.tipo) params.set('tipo', filtros.tipo);
+  if (filtros.localizacao) params.set('localizacao', filtros.localizacao);
+  const query = params.toString();
+  return request<Ativo[]>(`/ativos${query ? `?${query}` : ''}`);
+}
+
+export function fetchAtivo(id: string) {
+  return request<Ativo>(`/ativos/${id}`);
+}
+
+export function createAtivo(data: AtivoInput) {
+  return request<Ativo>('/ativos', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function updateAtivo(id: string, data: AtivoInput) {
+  return request<Ativo>(`/ativos/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+}
+
+export type IntervaloTipo = 'DIAS' | 'HORAS_USO';
+
+export interface PlanoManutencao {
+  id: string;
+  ativoId: string;
+  intervaloTipo: IntervaloTipo;
+  intervaloValor: number;
+  estaAtivo: boolean;
+}
+
+export interface PlanoInput {
+  ativoId: string;
+  intervaloTipo: IntervaloTipo;
+  intervaloValor: number;
+}
+
+export function fetchPlanos(ativoId: string) {
+  return request<PlanoManutencao[]>(`/planos?ativoId=${ativoId}`);
+}
+
+export function createPlano(data: PlanoInput) {
+  return request<PlanoManutencao>('/planos', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function desativarPlano(id: string) {
+  return request<PlanoManutencao>(`/planos/${id}/desativar`, { method: 'PATCH' });
+}
