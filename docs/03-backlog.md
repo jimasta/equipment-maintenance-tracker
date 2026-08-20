@@ -109,10 +109,10 @@
 - US09a — Status com cor + ícone + texto (acessível a daltonismo)
 
 **DoD do sprint:**
-- [ ] Cálculo de `proximoVencimento` implementado conforme regra do `docs/02-architecture.md`
-- [ ] Teste automatizado cobrindo os 3 estados de status com datas fixas (mock de data atual)
-- [ ] Critério de aceite do MVP: status correto baseado na data atual
-- [ ] Nenhum status é comunicado só por cor (checagem manual com simulador de daltonismo)
+- [x] Cálculo de `proximoVencimento` implementado conforme regra do `docs/02-architecture.md`
+- [x] Teste automatizado cobrindo os 3 estados de status com datas fixas (mock de data atual) — `backend/src/__tests__/statusService.test.ts`, 7 testes
+- [x] Critério de aceite do MVP: status correto baseado na data atual (validado manualmente com Postgres real: registrar execução mudou o status de Vencido para Em dia e recalculou `proximoVencimento` corretamente)
+- [x] Nenhum status é comunicado só por cor — `StatusBadge` sempre combina um dot colorido com o texto do status por extenso ("Vencido", "Próximo do vencimento", "Em dia"), nunca cor isolada
 
 ### Sprint 4 — Alertas, Histórico e Relatório
 **Objetivo:** fechar os critérios de aceite restantes do MVP com um dashboard de abertura e visualização de dados adequada.
@@ -162,6 +162,18 @@ Segunda rodada de feedback: o suporte a tema claro/escuro automático (`@media p
 A sidebar deixou de usar um neutro escuro genérico e passou a usar uma superfície terracota/laranja-queimado (`--sidebar-bg: #4a2a18` e tokens irmãos), pedido explícito para que o menu tivesse uma cor distinta do fundo do conteúdo com uma combinação harmônica. Essa cor convive com o accent teal da marca (botões/links) e com o status âmbar ("Próximo do vencimento") porque é uma cor de superfície passiva, não uma cor de ação/alerta — teal e terracota são aproximadamente complementares na roda cromática, o que reforça o contraste sem parecer aleatório.
 
 Revalidado visualmente (Postgres real + Chrome headless) em desktop expandido, colapsado e tablet.
+
+## Sprint 3 — decisões e implementação
+
+**Cálculo de status:** extraído para `backend/src/services/statusService.ts`, sem dependência de Prisma — puramente funções de data, o que permitiu testar os 3 estados (Em dia / Próximo / Vencido) com datas fixas via `vitest`, sem mock de banco. `proximoVencimento = (última execução, ou dataAquisicao do ativo se nunca houve execução) + intervaloValor dias`. Status: `hoje > proximoVencimento` → Vencido; `proximoVencimento - hoje <= 7 dias` → Próximo do vencimento; caso contrário → Em dia — conforme a regra do `docs/02-architecture.md`.
+
+**Decisão de produto — `intervaloTipo = HORAS_USO` não rastreia horas reais no MVP:** o schema não tem campo de horas de uso acumuladas do ativo, só datas. Por decisão explícita do usuário, o cálculo de vencimento trata `intervaloValor` como dias corridos independentemente de `intervaloTipo` ser `DIAS` ou `HORAS_USO` — o tipo continua sendo um rótulo informativo para o usuário (ex: "a cada 500 horas de uso"), mas o sistema sempre soma esse número em dias. Rastreamento real de horas de uso fica para uma iteração futura, fora do MVP.
+
+**Endpoints novos:** `POST /registros` e `GET /registros?planoManutencaoId=` (`backend/src/routes/registros.ts`) — qualquer usuário autenticado pode registrar uma execução (é o técnico fazendo o trabalho, não uma ação de gestão restrita a Supervisor/Gestor); o `tecnicoId` vem do token, não do corpo da requisição. `GET /planos` agora inclui `proximoVencimento`/`status` calculados por plano; novo `GET /planos/pendentes` lista, entre todos os ativos, os planos ativos com status Próximo ou Vencido, ordenados por urgência — usado pela tela de Pendências (US08).
+
+**Frontend:** `StatusBadge` (já existente desde o Sprint 0, nunca usado até agora) finalmente aplicado nos cards de plano (`AtivoDetailPage`) e nos cards de pendência (`PendenciasPage`, nova rota `/pendencias` com item de menu na sidebar). `RegistroForm` em drawer lateral, consistente com o padrão de `AtivoForm`/`PlanoForm`.
+
+Validado de ponta a ponta com Postgres real e Chrome headless: 3 ativos seedados com planos vencido/próximo/em-dia, confirmado visualmente na tela de Pendências (card do vencido com borda vermelha destacada), registrada uma execução real via formulário, e confirmado que o status recalculou de Vencido para Em dia (e que o item saiu da lista de pendências) — sem mocks, ciclo completo através do banco.
 
 ## Nota de ambiente — Docker
 O ambiente de desenvolvimento atual (sandbox de agente) não tem Docker/Docker Compose instalado, então `docker-compose up` não pôde ser exercitado diretamente aqui. Como alternativa equivalente, a validação de ponta a ponta do Sprint 1 foi feita com:

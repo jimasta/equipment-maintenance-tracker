@@ -79,6 +79,7 @@ export function updateAtivo(id: string, data: AtivoInput) {
 }
 
 export type IntervaloTipo = 'DIAS' | 'HORAS_USO';
+export type StatusPlano = 'EM_DIA' | 'PROXIMO' | 'VENCIDO';
 
 export interface PlanoManutencao {
   id: string;
@@ -86,6 +87,12 @@ export interface PlanoManutencao {
   intervaloTipo: IntervaloTipo;
   intervaloValor: number;
   estaAtivo: boolean;
+  proximoVencimento: string | null;
+  status: StatusPlano | null;
+}
+
+export interface PlanoPendente extends PlanoManutencao {
+  ativo: { id: string; nome: string; dataAquisicao: string };
 }
 
 export interface PlanoInput {
@@ -98,10 +105,40 @@ export function fetchPlanos(ativoId: string) {
   return request<PlanoManutencao[]>(`/planos?ativoId=${ativoId}`);
 }
 
+export function fetchPlanosPendentes() {
+  return request<PlanoPendente[]>('/planos/pendentes');
+}
+
 export function createPlano(data: PlanoInput) {
   return request<PlanoManutencao>('/planos', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export function desativarPlano(id: string) {
   return request<PlanoManutencao>(`/planos/${id}/desativar`, { method: 'PATCH' });
+}
+
+export interface RegistroManutencao {
+  id: string;
+  planoManutencaoId: string;
+  tecnicoId: string;
+  dataExecucao: string;
+  observacoes: string | null;
+  custo: string;
+  criadoEm: string;
+  tecnico?: { id: string; nome: string };
+}
+
+export interface RegistroInput {
+  planoManutencaoId: string;
+  dataExecucao: string;
+  observacoes?: string;
+  custo: number;
+}
+
+export function fetchRegistros(planoManutencaoId: string) {
+  return request<RegistroManutencao[]>(`/registros?planoManutencaoId=${planoManutencaoId}`);
+}
+
+export function createRegistro(data: RegistroInput) {
+  return request<RegistroManutencao>('/registros', { method: 'POST', body: JSON.stringify(data) });
 }

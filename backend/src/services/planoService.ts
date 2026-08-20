@@ -1,5 +1,6 @@
 import { IntervaloTipo } from '@prisma/client';
 import { prisma } from '../lib/prisma';
+import { calcularProximoVencimento, calcularStatus } from './statusService';
 
 export interface PlanoInput {
   ativoId: string;
@@ -7,11 +8,59 @@ export interface PlanoInput {
   intervaloValor: number;
 }
 
-export function listPlanosPorAtivo(ativoId: string) {
-  return prisma.planoManutencao.findMany({
+const INCLUDE_PARA_STATUS = {
+  ativo: { select: { id: true, nome: true, dataAquisicao: true } },
+  registros: {
+    orderBy: { dataExecucao: 'desc' as const },
+    take: 1,
+    select: { dataExecucao: true },
+  },
+};
+
+function comStatus<
+  T extends {
+    estaAtivo: boolean;
+    intervaloValor: number;
+    ativo: { dataAquisicao: Date };
+    registros: { dataExecucao: Date }[];
+  },
+>(plano: T) {
+  const { registros, ...resto } = plano;
+  if (!plano.estaAtivo) {
+    return { ...resto, proximoVencimento: null, status: null };
+  }
+  const proximoVencimento = calcularProximoVencimento({
+    intervaloValor: plano.intervaloValor,
+    dataAquisicaoAtivo: plano.ativo.dataAquisicao,
+    ultimaExecucao: registros[0]?.dataExecucao ?? null,
+  });
+  return {
+    ...resto,
+    proximoVencimento,
+    status: calcularStatus(proximoVencimento),
+  };
+}
+
+export async function listPlanosPorAtivo(ativoId: string) {
+  const planos = await prisma.planoManutencao.findMany({
     where: { ativoId },
     orderBy: { id: 'asc' },
+    include: INCLUDE_PARA_STATUS,
   });
+
+  return planos.map(comStatus);
+}
+
+export async function listPlanosPendentes() {
+  const planos = await prisma.planoManutencao.findMany({
+    where: { estaAtivo: true },
+    include: INCLUDE_PARA_STATUS,
+  });
+
+  return planos
+    .map(comStatus)
+    .filter((p) => p.status === 'PROXIMO' || p.status === 'VENCIDO')
+    .sort((a, b) => a.proximoVencimento!.getTime() - b.proximoVencimento!.getTime());
 }
 
 export function getPlano(id: string) {

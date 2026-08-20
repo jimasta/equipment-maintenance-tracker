@@ -39,6 +39,27 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    to: '/pendencias',
+    end: true,
+    label: 'Pendências',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M6 9a6 6 0 0 1 12 0c0 3.4 1 5 1.5 5.5H4.5C5 14 6 12.4 6 9z"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M10 18a2 2 0 0 0 4 0"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
 ];
 
 function getInitials(nome: string) {
@@ -53,6 +74,7 @@ function useBreadcrumb() {
   if (location.pathname === '/') return ['Painel'];
   if (location.pathname === '/ativos') return ['Ativos'];
   if (location.pathname.startsWith('/ativos/')) return ['Ativos', 'Detalhe do ativo'];
+  if (location.pathname === '/pendencias') return ['Pendências'];
   return [];
 }
 
