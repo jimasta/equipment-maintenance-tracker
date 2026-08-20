@@ -78,11 +78,11 @@
 - US02a — Nome/papel do usuário no cabeçalho + logout
 
 **DoD do sprint:**
-- [ ] `docker-compose up` sobe API + banco sem erro
-- [ ] Login retorna JWT válido; rota protegida rejeita token ausente/inválido
-- [ ] Papel do usuário embutido no token e validado em pelo menos uma rota
-- [ ] Layout shell funciona em viewport de desktop e tablet (≥768px)
-- [ ] Tela de login segue os tokens de design (sem cor/fonte hardcoded)
+- [ ] `docker-compose up` sobe API + banco sem erro *(a revalidar — ambiente atual sem Docker disponível)*
+- [x] Login retorna JWT válido; rota protegida rejeita token ausente/inválido
+- [x] Papel do usuário embutido no token e validado em pelo menos uma rota
+- [x] Layout shell funciona em viewport de desktop e tablet (≥768px)
+- [x] Tela de login segue os tokens de design (sem cor/fonte hardcoded)
 
 ### Sprint 2 — Cadastro de Ativos e Planos
 **Objetivo:** permitir cadastro completo de ativo + plano de manutenção, com UI polida.
@@ -141,4 +141,4 @@
 Cada user story deve virar uma Issue no repositório, com label do épico correspondente (`ui-foundation`, `auth`, `ativos`, `manutencao`, `status-alertas`, `historico-relatorio`) e milestone do sprint (`Sprint 0`–`Sprint 4`).
 
 ## Próximo passo
-Etapa 4 — Setup inicial do código (scaffold): estrutura de pastas, lint/formatter, testes, CI básico via GitHub Actions.
+Sprint 1 concluído (auth API + UI). Revalidar `docker-compose up` fim a fim quando Docker estiver disponível; em seguida, iniciar Sprint 2 (cadastro de ativos e planos de manutenção).
