@@ -141,6 +141,8 @@ Principais decisões de arquitetura documentadas em [`docs/02-architecture.md`](
 
 Detalhe de implementação relevante: o `Dockerfile` do backend precisou de `openssl` explícito (Prisma não detecta a lib corretamente em Alpine sem isso) e ambos os projetos precisam de `.dockerignore` para impedir que o `node_modules` do host contamine a imagem Linux com binários nativos incompatíveis (ex: `bcrypt`).
 
+CORS habilitado no backend (`backend/src/app.ts`) restrito à origin do frontend, configurável via `FRONTEND_URL` — sem isso, toda chamada do frontend real (porta diferente do backend em dev, domínio diferente em produção) seria bloqueada pelo browser mesmo com a API respondendo normalmente a `curl`.
+
 ## ✅ Testes
 ```bash
 # Backend
@@ -151,7 +153,7 @@ cd frontend && npm test
 ```
 Cobertura atual (backend): smoke test de `/health`, `authService` (hash/verificação de senha, emissão/validação de JWT) e rotas de autenticação (`/auth/login` com credenciais válidas/inválidas, `/me` com e sem token) — 9 testes automatizados, todos com Prisma mockado. Frontend: redirecionamento de rota protegida para `/login`, validação inline de formulário vazio e exibição de erro de credenciais inválidas (API mockada). Cobertura por feature será expandida a cada sprint, conforme a Definition of Done em [`docs/03-backlog.md`](docs/03-backlog.md).
 
-> Validação end-to-end via `docker-compose` com PostgreSQL real (login + navegação autenticada) ainda não foi refeita após a UI de auth — pendente antes de fechar o sprint formalmente.
+Validação end-to-end (login real, JWT real, rota protegida, navegação autenticada) foi refeita com PostgreSQL real e o fluxo de UI dirigido por browser de verdade — ver detalhes em [`docs/03-backlog.md`](docs/03-backlog.md#nota-de-ambiente--docker). Essa validação revelou e corrigiu a ausência de CORS no backend, que bloquearia toda chamada do frontend em produção/dev com portas ou domínios diferentes.
 
 ## 🗺️ Roadmap
 - [x] Sprint 1 — Autenticação completa (API + layout shell responsivo + tela de login)
