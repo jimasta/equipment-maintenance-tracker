@@ -1,35 +1,35 @@
 /*
   Design tokens — Equipment Maintenance Tracker
-  Light theme only. Brand accent (teal/petrol, hue ~192) is kept clear of the
-  status hue band (green/amber/red) so primary actions are never mistaken for
-  a maintenance alert. Status colors are fixed. The sidebar uses a distinct
-  burnt-orange surface (--sidebar-*) for visual separation from the content
-  area — it's a passive surface, not an action color, so it doesn't collide
-  with the amber "Próximo do vencimento" status.
+  Light theme only. Palette follows a warm peach/cream page surface with a
+  solid near-black accent for primary actions (Teamio-style reference) —
+  black is not on the status hue band, so it never collides with the amber
+  "Próximo do vencimento" status. The sidebar uses a lighter, more saturated
+  step of the same peach family for gentle separation from the white content
+  surface, without the strong dark contrast of the previous direction.
 */
 
 :root {
   color-scheme: light;
 
-  /* Brand accent */
-  --brand-300: #61bbd1;
-  --brand-400: #33a5c1;
-  --brand-500: #25859d;
-  --brand-600: #186c81;
-  --brand-700: #11515f;
+  /* Brand accent — near-black, used for primary buttons/links */
+  --brand-300: #6b6b6b;
+  --brand-400: #4a4a4a;
+  --brand-500: #2e2e2e;
+  --brand-600: #1a1a1a;
+  --brand-700: #0d0d0d;
 
-  /* Neutrals — slight cool bias toward the brand hue */
+  /* Neutrals — warm peach bias instead of cool gray */
   --neutral-0: #ffffff;
-  --neutral-50: #f7f8f9;
-  --neutral-100: #eef0f2;
-  --neutral-200: #dde1e4;
-  --neutral-300: #c2c8cd;
-  --neutral-400: #9aa3aa;
-  --neutral-500: #717b83;
-  --neutral-600: #545e66;
-  --neutral-700: #3c454c;
-  --neutral-800: #262e33;
-  --neutral-900: #14191c;
+  --neutral-50: #faf3ea;
+  --neutral-100: #f5e6d3;
+  --neutral-200: #ecd4b8;
+  --neutral-300: #ddbd97;
+  --neutral-400: #b89a78;
+  --neutral-500: #8f7860;
+  --neutral-600: #6b5847;
+  --neutral-700: #4a3c30;
+  --neutral-800: #2e241c;
+  --neutral-900: #1c1712;
 
   /* Status — fixed (Em dia / Próximo do vencimento / Vencido) */
   --status-good: #0ca30c;
@@ -40,9 +40,9 @@
   --status-critical-bg: #fbe8e8;
 
   /* Surfaces */
-  --surface-page: var(--neutral-50);
+  --surface-page: var(--neutral-100);
   --surface-raised: var(--neutral-0);
-  --surface-sunken: var(--neutral-100);
+  --surface-sunken: var(--neutral-50);
   --border-hairline: var(--neutral-200);
 
   /* Ink */
@@ -54,7 +54,7 @@
   /* Interactive */
   --accent: var(--brand-600);
   --accent-hover: var(--brand-700);
-  --accent-subtle-bg: #e4f0f3;
+  --accent-subtle-bg: var(--neutral-100);
   --focus-ring: var(--brand-400);
 
   /* Typography */
@@ -97,14 +97,15 @@
   --shadow-sm: 0 1px 2px rgba(20, 25, 28, 0.06);
   --shadow-md: 0 4px 12px rgba(20, 25, 28, 0.08);
 
-  /* Sidebar — burnt-orange surface, distinct from the page/content background */
-  --sidebar-bg: #4a2a18;
-  --sidebar-bg-raised: #5c3620;
-  --sidebar-border: #6b3f26;
-  --sidebar-text: #fdf3ec;
-  --sidebar-text-secondary: #e0b79a;
-  --sidebar-text-muted: #b98a6b;
-  --sidebar-active-bg: rgba(255, 255, 255, 0.14);
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
-  --sidebar-accent: #e08a4f;
+  /* Sidebar — a warmer, more saturated step of the peach family, distinct
+     from the white content surface but still light (no dark contrast) */
+  --sidebar-bg: #f7a030;
+  --sidebar-bg-raised: #e8cca6;
+  --sidebar-border: #ddbd97;
+  --sidebar-text: #1c1712;
+  --sidebar-text-secondary: #6b5847;
+  --sidebar-text-muted: #8f7860;
+  --sidebar-active-bg: #ffffff;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.5);
+  --sidebar-accent: #1a1a1a;
 }

@@ -41,7 +41,7 @@ Status atual: **MVP completo** — Sprint 4 concluído ([`docs/03-backlog.md`](d
 - [x] Design system (tokens de cor/tipografia, componentes base)
 - [x] Login (API) e controle de acesso por papel (Técnico / Supervisor / Gestor) — `POST /auth/login`, JWT, middleware `requireAuth`/`requireRole`
 - [x] Tela de login e layout shell responsivo (frontend) — sidebar colapsável com navegação, validação inline, avatar/nome/papel do usuário e logout, rota protegida com redirecionamento
-- [x] Painel inicial com resumo de inventário e contagem de status Em dia/Próximo/Vencido
+- [x] Painel inicial com card por tipo de ativo, ativos próximos do vencimento (30 dias), contagem de status e gráfico de manutenções por mês
 - [x] Cadastro e listagem de ativos — busca por nome/localização, filtro por tipo, formulário em painel lateral com validação inline, edição restrita a Supervisor/Gestor
 - [x] Cadastro de plano de manutenção preventiva (por dias ou horas de uso) — vinculado ao ativo, com desativação sem apagar histórico
 - [x] Registro de execução de manutenção (data, técnico, custo, observações) — qualquer usuário autenticado registra, técnico vem do token
@@ -80,9 +80,9 @@ Alertas e relatórios: `NotificationService` (`backend/src/services/notification
 ## 🎨 Design System
 Cores, tipografia, espaçamento e raio de borda são centralizados em variáveis CSS (`frontend/src/styles/tokens.css`). A aplicação usa somente tema claro (o suporte a tema escuro automático foi removido por decisão do usuário, para simplificar a manutenção da paleta):
 
-- **Accent de marca:** azul-petróleo, usado em botões e links primários, escolhido deliberadamente distante da faixa laranja/âmbar/vermelho usada pelos status, para que uma ação primária nunca seja confundida com um alerta de manutenção vencida.
+- **Paleta pêssego/creme quente**, inspirada em uma referência de dashboard ("Teamio"): fundo de página em pêssego pastel, cards em branco puro, sidebar num tom mais saturado da mesma família (com texto escuro, sem contraste dark forte).
+- **Accent de marca: quase-preto**, usado em botões e links primários — terceira revisão da cor de marca do projeto (histórico: laranja industrial → azul-petróleo → preto), escolhida por estar fora de qualquer faixa de matiz usada pelos status, então nunca compete visualmente com os alertas.
 - **Status fixo:** verde (Em dia), âmbar (Próximo do vencimento), vermelho (Vencido) — sempre comunicado com cor + ícone + texto, nunca só cor.
-- **Sidebar com superfície terracota/laranja-queimado:** distinta do fundo claro do conteúdo, via tokens dedicados (`--sidebar-bg`, `--sidebar-text`, `--sidebar-accent`, etc. em `tokens.css`). É uma cor de superfície passiva (não uma cor de ação/alerta), então convive com o accent teal e o status âmbar sem ambiguidade — teal e terracota são aproximadamente complementares, o que reforça o contraste.
 - **Tipografia:** Inter (interface) + JetBrains Mono (dados tabulares/códigos de ativo).
 
 Componentes de UI (`frontend/src/components/`) consomem exclusivamente essas variáveis — trocar a paleta ou a fonte da aplicação inteira é uma edição em um único arquivo.

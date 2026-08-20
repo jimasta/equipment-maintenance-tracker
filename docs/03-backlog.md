@@ -187,6 +187,16 @@ Validado de ponta a ponta com Postgres real e Chrome headless: 3 ativos seedados
 
 Com este sprint, os 4 critérios de aceite do MVP (`docs/01-discovery.md`) estão implementados e foram revalidados manualmente com dados reais: (1) cadastro de ativo + plano em menos de 2 minutos — Sprint 2; (2) status correto baseado na data atual — Sprint 3, reconfirmado aqui; (3) alerta disparado automaticamente — confirmado via log real do `NotificationService` ao acessar `/pendencias`; (4) histórico completo numa única tela — confirmado na `AtivoDetailPage` com um registro real criado nos testes deste sprint.
 
+## Ajuste de UI pós-MVP — paleta Teamio e refinamentos do Painel
+Após o MVP fechado (Sprint 4), nova rodada de feedback visual trouxe uma referência de dashboard ("Teamio"): fundo pêssego/creme pastel, cards brancos, accent preto sólido em vez de cor. Terceira revisão de paleta do projeto (histórico: laranja industrial → teal → preto):
+
+- **`tokens.css` reescrito**: `--neutral-*` passou de escala cinza-fria para escala pêssego/creme quente (`--neutral-50: #faf3ea` até `--neutral-900: #1c1712`); `--brand-*` (accent) passou de teal para quase-preto (`--brand-600: #1a1a1a`), resolvendo por completo a preocupação histórica de "accent perto do âmbar de status", já que preto não está na faixa de matiz nenhuma.
+- **Sidebar** deixou de ser a superfície terracota escura da rodada anterior e passou a usar um tom mais saturado da mesma família pêssego, com texto escuro — sem mais contraste dark forte, mais alinhado à referência (que não tem sidebar escura).
+- **Painel (Dashboard) redesenhado**: card totalizador por tipo de ativo (clicável, filtra `/ativos?tipo=`) substituindo a antiga lista lateral "Por tipo"; "Ativos recentes" virou "Ativos próximos do vencimento" (usa `GET /planos/pendentes`, filtrado para `proximoVencimento` dentro de 30 dias — inclui os já vencidos, por decisão explícita); novo gráfico de barras "Manutenções por mês" (últimos 6 meses, a partir do histórico agregado de todos os ativos).
+- **Achado de performance (não corrigido, fora do escopo pedido):** o carregamento do Dashboard agora dispara ~51 requisições HTTP (uma `GET /planos` e uma `GET /ativos/:id/historico` por ativo, via `Promise.all`). Funciona, mas não escala bem — resolver exigiria endpoints agregados novos no backend (ex: `GET /planos?ativoId=a,b,c` em lote, ou um endpoint de dashboard dedicado). Registrado aqui para decisão futura.
+
+Validado visualmente com Postgres real (25 ativos seedados, 5 de cada tipo) e Chrome headless — confirmado que os cards por tipo, a lista de vencimentos e o gráfico mensal refletem dados reais persistidos no banco.
+
 ## Nota de ambiente — Docker
 O ambiente de desenvolvimento atual (sandbox de agente) não tem Docker/Docker Compose instalado, então `docker-compose up` não pôde ser exercitado diretamente aqui. Como alternativa equivalente, a validação de ponta a ponta do Sprint 1 foi feita com:
 - PostgreSQL portátil (binários EDB, sem instalação como serviço) com as migrations reais do Prisma aplicadas;
