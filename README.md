@@ -179,7 +179,4 @@ Validação end-to-end (login real, JWT real, CRUD de ativo/plano/registro de ex
 ## 📄 Licença
 Distribuído sob licença MIT. Veja [`LICENSE`](LICENSE) para mais detalhes.
 
----
-<div align="center">
-Desenvolvido por <b>Jorge</b> — parte de um portfólio de 18 projetos cobrindo Fullstack e Power Platform
-</div>
+
